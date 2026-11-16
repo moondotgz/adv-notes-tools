@@ -2,6 +2,116 @@
   "format": 1,
   "tools": [
     {
+      "id": "feynman",
+      "name": "Feynman explainer",
+      "description": "Explain a concept in your own words and the AI points out gaps, errors and jargon, then asks a deeper question.",
+      "icon": "chat",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/feynman",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 6607,
+          "sha256": "399a1c0402995c505d32e8dc83e52307af6845ca577e75a009b1eddfad9da0d6"
+        },
+        {
+          "path": "manifest.json",
+          "size": 298,
+          "sha256": "e74bc305332272809d33b6f5a581097cfe8c3b68e132a1d433c2c081b70a1e3d"
+        }
+      ]
+    },
+    {
+      "id": "flashcards",
+      "name": "Flashcards",
+      "description": "Spaced-repetition flashcards. Add cards by hand or let the AI write them from your page, then review what's due.",
+      "icon": "book",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/flashcards",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 9958,
+          "sha256": "07676c0881606a94955648786409d249db6905ff67b7d7f5e88b51abbf706cfd"
+        },
+        {
+          "path": "manifest.json",
+          "size": 295,
+          "sha256": "ac58fa20a489bbec4e43412e44088b8045557b2a195d6c323693c22810036d24"
+        }
+      ]
+    },
+    {
+      "id": "pomodoro",
+      "name": "Focus timer",
+      "description": "Pomodoro timer with focus and break cycles, a daily study total and a weekly chart. Write your study time onto the page.",
+      "icon": "timer",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/pomodoro",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 9704,
+          "sha256": "054a76975e8869404c9fc4e9afd6a6713a282445ddce1e2a0abc05975c5a899b"
+        },
+        {
+          "path": "manifest.json",
+          "size": 303,
+          "sha256": "847d5b98a0ae6471506b216f0a124810c87b17eb736f89453042cb2478f14511"
+        }
+      ]
+    },
+    {
+      "id": "formulas",
+      "name": "Formula sheet",
+      "description": "Searchable formulas for maths, stats, physics, chemistry and finance. Add your own and write any of them onto the page.",
+      "icon": "functions",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/formulas",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 8456,
+          "sha256": "6647998d156c4636f6bf41d9ab63ce323b9e5a0666c5af6cf272f441ff9b6f16"
+        },
+        {
+          "path": "manifest.json",
+          "size": 308,
+          "sha256": "1a6897077d517e05feeaac4f7735c74cd311eac4dcb10381971a04498bcadca9"
+        }
+      ]
+    },
+    {
+      "id": "glossary",
+      "name": "Glossary builder",
+      "description": "Collect terms as you study, let the AI define them or find them on your page, then write the glossary onto the page.",
+      "icon": "translate",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/glossary",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 7529,
+          "sha256": "9e541ddbfc955cb3d8ce6e6589d49fdcebe980e3aa70325a48e4ae395b6916af"
+        },
+        {
+          "path": "manifest.json",
+          "size": 308,
+          "sha256": "d23c362a58f358d58f1bc61ba5acd60bafba0568a3f53f3574562cc27e1f1438"
+        }
+      ]
+    },
+    {
       "id": "pdfreader",
       "name": "PDF reader",
       "description": "Read PDFs next to your notes: table of contents, bookmarks, search, cite a page, ask AI about a page",
@@ -40,6 +150,50 @@
           "path": "pdfjs/pdf.worker.min.js",
           "size": 1417586,
           "sha256": "bd88805178a26c729db8c0107a5b630cb900ec070f4d8c7529a3e45530afd41d"
+        }
+      ]
+    },
+    {
+      "id": "quiz",
+      "name": "Quiz me",
+      "description": "The AI writes a multiple-choice quiz from a topic or your page, marks your answers and remembers your weak topics so you can drill them.",
+      "icon": "science",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/quiz",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 9273,
+          "sha256": "5b2c47b08ba48701e6ac1538cf3f95cc551c9ccf536d31c57eb4cde72dd0f46e"
+        },
+        {
+          "path": "manifest.json",
+          "size": 313,
+          "sha256": "058d12ca006e77dbbe79c673ade0ccbb2975cf92329d4b22a33d085129fac066"
+        }
+      ]
+    },
+    {
+      "id": "streak",
+      "name": "Study streak",
+      "description": "Check in each day you study and watch your streak and a calendar heatmap grow.",
+      "icon": "map",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/streak",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 7792,
+          "sha256": "05f3b79cfbb6cffc20334fcd68608cdedd601c431000d6544e832a1af943c8ad"
+        },
+        {
+          "path": "manifest.json",
+          "size": 258,
+          "sha256": "238b97d68dead1231efd331934ad134132f4be9319ca37bfba2c9db8fec6ddcd"
         }
       ]
     },

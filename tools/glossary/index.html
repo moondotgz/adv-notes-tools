@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glossary builder</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<div class="row"><input id="term" placeholder="Add a term"><button class="fit" id="add">Add</button></div>
+<div class="row"><button class="ghost" id="define">Define it with AI</button></div>
+<div class="row"><button class="ghost" id="scan">Find terms on my page</button></div>
+<div id="msg" class="muted"></div>
+<input id="find" placeholder="Search glossary" style="margin-top:8px">
+<div id="list"></div>
+<div class="row"><button id="ins">Write glossary on page</button></div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const a = t.search(/[\[{]/); if (a < 0) throw new Error('The AI did not return structured data. Try again.');
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  return JSON.parse(t.slice(a, b + 1));
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+let g = db.get('terms', []);   // [{t, d}]
+const save = () => { g.sort((a, b) => a.t.localeCompare(b.t)); db.set('terms', g); };
+const setMsg = m => $('msg').textContent = m;
+
+function render() {
+  const f = $('find').value.toLowerCase();
+  $('list').innerHTML = g.filter(x => (x.t + ' ' + x.d).toLowerCase().includes(f)).map(x => `
+    <div class="card"><b>${esc(x.t)}</b>
+      <div class="muted" contenteditable data-t="${esc(x.t)}" style="margin:4px 0;outline:none">${esc(x.d) || '<i>tap to write a definition</i>'}</div>
+      <div class="row"><button class="ghost fit" data-ai="${esc(x.t)}">AI define</button><button class="ghost fit" data-del="${esc(x.t)}">Delete</button></div></div>`).join('') || '<p class="muted">No terms yet.</p>';
+  $('list').querySelectorAll('[contenteditable]').forEach(el => el.onblur = () => {
+    const x = g.find(y => y.t === el.dataset.t); const v = el.textContent.trim();
+    if (x && v !== 'tap to write a definition') { x.d = v; save(); }
+  });
+  $('list').querySelectorAll('[data-del]').forEach(b => b.onclick = () => { g = g.filter(x => x.t !== b.dataset.del); save(); render(); });
+  $('list').querySelectorAll('[data-ai]').forEach(b => b.onclick = () => define([b.dataset.ai]));
+  $('ins').disabled = !g.length;
+}
+function add(t, d = '') {
+  t = t.trim(); if (!t) return false;
+  const x = g.find(y => y.t.toLowerCase() === t.toLowerCase());
+  if (x) { if (d && !x.d) x.d = d; } else g.push({ t, d });
+  return true;
+}
+$('add').onclick = () => { if (add($('term').value)) { $('term').value = ''; save(); render(); } };
+$('term').onkeydown = e => { if (e.key === 'Enter') $('add').click(); };
+
+async function define(terms) {
+  setMsg('Defining…');
+  try {
+    const t = await ask(`Define each term in one clear sentence suitable for a student's glossary. Terms: ${JSON.stringify(terms)}. Reply with ONLY a JSON array like [{"t":"term","d":"definition"}] using the exact terms given.`);
+    const arr = parseJSON(t); let n = 0;
+    for (const x of arr) { const e = g.find(y => y.t.toLowerCase() === String(x.t).toLowerCase()); if (e && x.d) { e.d = String(x.d); n++; } }
+    save(); render(); setMsg(`Defined ${n} term${n === 1 ? '' : 's'}.`);
+  } catch (e) { setMsg(e.message); }
+}
+$('define').onclick = async () => {
+  const typed = $('term').value.trim();
+  if (typed) { add(typed); $('term').value = ''; save(); render(); await define([typed]); }
+  else { const missing = g.filter(x => !x.d).map(x => x.t); missing.length ? await define(missing) : setMsg('Type a term first, or add terms without definitions.'); }
+};
+$('scan').onclick = async () => {
+  setMsg('Reading your page…');
+  try {
+    const t = await ask('List the key technical terms worth putting in a study glossary from the attached image (at most 12), each with a one-sentence definition. Reply with ONLY a JSON array like [{"t":"term","d":"definition"}].', { image: 'page' });
+    const arr = parseJSON(t).filter(x => x && x.t); arr.forEach(x => add(String(x.t), String(x.d || '')));
+    save(); render(); setMsg(`Found ${arr.length} terms.`);
+  } catch (e) { setMsg(e.message); }
+};
+$('find').oninput = render;
+$('ins').onclick = () => insert('Glossary\n' + g.map(x => `${x.t}: ${x.d || '—'}`).join('\n'));
+render();
+
+})();
+</script>
+</body>
+</html>

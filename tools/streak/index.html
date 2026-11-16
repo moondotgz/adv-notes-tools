@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study streak</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<div class="row" style="text-align:center">
+  <div class="card"><div style="font-size:34px" id="cur">0</div><div class="muted">day streak 🔥</div></div>
+  <div class="card"><div style="font-size:34px" id="best">0</div><div class="muted">best streak</div></div>
+  <div class="card"><div style="font-size:34px" id="total">0</div><div class="muted">days studied</div></div>
+</div>
+<div class="row"><input id="min" type="number" min="0" placeholder="Minutes (optional)" class="fit" style="width:140px"><button id="check">I studied today</button></div>
+<div class="muted" id="msg" style="text-align:center"></div>
+<div class="row" style="margin-top:14px"><button class="ghost fit" id="prev">‹</button><div id="monthName" style="text-align:center"></div><button class="ghost fit" id="next">›</button></div>
+<div id="cal" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+<div class="row"><button class="ghost" id="ins">Write streak on page</button></div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const a = t.search(/[\[{]/); if (a < 0) throw new Error('The AI did not return structured data. Try again.');
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  return JSON.parse(t.slice(a, b + 1));
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+let log = db.get('days', {});        // 'YYYY-MM-DD' -> minutes (0 = checked in, unknown length)
+let view = new Date(); view.setDate(1);
+const key = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+function stats() {
+  const days = Object.keys(log).sort(), set = new Set(days);
+  let best = 0, run = 0, prev = null;
+  for (const d of days) { run = prev !== null && dayNum(d) - prev === 1 ? run + 1 : 1; best = Math.max(best, run); prev = dayNum(d); }
+  // current streak: counts back from today, or from yesterday if today isn't checked in yet
+  let cur = 0, t = dayNum(today());
+  if (!set.has(today())) t--;
+  const nums = new Set(days.map(dayNum));
+  while (nums.has(t)) { cur++; t--; }
+  return { cur, best, total: days.length };
+}
+function render() {
+  const s = stats();
+  $('cur').textContent = s.cur; $('best').textContent = s.best; $('total').textContent = s.total;
+  const done = today() in log;
+  $('check').textContent = done ? 'Update today' : 'I studied today';
+  $('msg').textContent = done ? `Today is logged${log[today()] ? ' (' + log[today()] + ' min)' : ''}. Nice work!` : (s.cur ? `Keep your ${s.cur}-day streak alive!` : 'Start a streak today.');
+  $('monthName').textContent = view.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const first = (view.getDay() + 6) % 7, n = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+  const max = Math.max(60, ...Object.values(log));
+  let h = ['M','T','W','T','F','S','S'].map(x => `<div class="muted" style="text-align:center;font-size:12px">${x}</div>`).join('');
+  h += '<div></div>'.repeat(first);
+  for (let d = 1; d <= n; d++) {
+    const k = key(new Date(view.getFullYear(), view.getMonth(), d)), has = k in log;
+    const a = has ? 0.35 + 0.65 * Math.min(1, (log[k] || 30) / max) : 0;
+    h += `<div data-k="${k}" style="aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;background:${has ? `color-mix(in srgb, var(--good) ${Math.round(a * 100)}%, var(--field))` : 'var(--field)'};${k === today() ? 'outline:2px solid var(--accent);' : ''}${has ? 'color:#fff;' : 'color:var(--muted);'}">${d}</div>`;
+  }
+  $('cal').innerHTML = h;
+  // tap any past/present day to toggle it (e.g. to fix a forgotten check-in)
+  $('cal').querySelectorAll('[data-k]').forEach(el => el.onclick = () => {
+    const k = el.dataset.k; if (k > today()) return;
+    if (k in log) delete log[k]; else log[k] = 0;
+    db.set('days', log); render();
+  });
+}
+$('check').onclick = () => { log[today()] = Math.max(0, +$('min').value || log[today()] || 0); db.set('days', log); $('min').value = ''; render(); };
+$('prev').onclick = () => { view.setMonth(view.getMonth() - 1); render(); };
+$('next').onclick = () => { view.setMonth(view.getMonth() + 1); render(); };
+$('ins').onclick = () => { const s = stats(); insert(`Study streak: ${s.cur} days 🔥 (best ${s.best}, ${s.total} days total)`); };
+render();
+
+})();
+</script>
+</body>
+</html>

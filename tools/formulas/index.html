@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formula sheet</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<input id="find" placeholder="Search formulas">
+<div class="row" id="chips" style="flex-wrap:wrap"></div>
+<div id="list"></div>
+<details style="margin-top:16px"><summary class="muted">Add your own</summary>
+  <div class="row"><input id="fn" placeholder="Name (e.g. Kinetic energy)"></div>
+  <div class="row"><input id="fe" placeholder="Formula (e.g. E = ½mv²)"></div>
+  <div class="row"><input id="fs" placeholder="Subject (e.g. Physics)"></div>
+  <div class="row"><button id="add">Save formula</button></div>
+</details>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const a = t.search(/[\[{]/); if (a < 0) throw new Error('The AI did not return structured data. Try again.');
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  return JSON.parse(t.slice(a, b + 1));
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+const BUILT = [
+ ['Math','Quadratic formula','x = (−b ± √(b² − 4ac)) / 2a'],
+ ['Math','Pythagorean theorem','a² + b² = c²'],
+ ['Math','Circle area / circumference','A = πr²,  C = 2πr'],
+ ['Math','Sphere volume / surface','V = 4/3 πr³,  A = 4πr²'],
+ ['Math','Cylinder volume','V = πr²h'],
+ ['Math','Distance between points','d = √((x₂−x₁)² + (y₂−y₁)²)'],
+ ['Math','Slope','m = (y₂ − y₁) / (x₂ − x₁)'],
+ ['Math','Arithmetic series sum','Sₙ = n(a₁ + aₙ) / 2'],
+ ['Math','Geometric series sum','Sₙ = a(1 − rⁿ) / (1 − r)'],
+ ['Math','Sine / cosine rule','a/sin A = b/sin B;  c² = a² + b² − 2ab cos C'],
+ ['Math','Trig identity','sin²θ + cos²θ = 1'],
+ ['Math','Derivative power rule','d/dx xⁿ = n·xⁿ⁻¹'],
+ ['Math','Product / chain rule','(fg)′ = f′g + fg′;  (f∘g)′ = f′(g)·g′'],
+ ['Math','Integration by parts','∫u dv = uv − ∫v du'],
+ ['Math','Binomial coefficient','C(n,k) = n! / (k!(n−k)!)'],
+ ['Stats','Mean / variance','μ = Σx/n;  σ² = Σ(x−μ)²/n'],
+ ['Stats','Standard error','SE = σ / √n'],
+ ['Stats','z-score','z = (x − μ) / σ'],
+ ['Stats','Bayes\' theorem','P(A|B) = P(B|A)·P(A) / P(B)'],
+ ['Physics','Velocity / acceleration','v = u + at;  s = ut + ½at²;  v² = u² + 2as'],
+ ['Physics','Newton\'s second law','F = ma'],
+ ['Physics','Kinetic / potential energy','Eₖ = ½mv²;  Eₚ = mgh'],
+ ['Physics','Work and power','W = Fd cos θ;  P = W/t'],
+ ['Physics','Momentum / impulse','p = mv;  J = FΔt = Δp'],
+ ['Physics','Gravitation','F = G·m₁m₂ / r²'],
+ ['Physics','Centripetal force','F = mv² / r'],
+ ['Physics','Ohm\'s law and power','V = IR;  P = IV = I²R'],
+ ['Physics','Resistors','series: R = R₁ + R₂;  parallel: 1/R = 1/R₁ + 1/R₂'],
+ ['Physics','Wave speed','v = fλ'],
+ ['Physics','Snell\'s law','n₁ sin θ₁ = n₂ sin θ₂'],
+ ['Physics','Mass–energy','E = mc²'],
+ ['Chemistry','Ideal gas law','PV = nRT'],
+ ['Chemistry','Moles','n = m / M'],
+ ['Chemistry','Concentration','c = n / V'],
+ ['Chemistry','pH','pH = −log₁₀[H⁺]'],
+ ['Chemistry','Dilution','C₁V₁ = C₂V₂'],
+ ['Chemistry','Gibbs free energy','ΔG = ΔH − TΔS'],
+ ['Chemistry','Henderson–Hasselbalch','pH = pKa + log([A⁻]/[HA])'],
+ ['Finance','Compound interest','A = P(1 + r/n)^(nt)'],
+ ['Finance','Simple interest','I = Prt'],
+];
+let custom = db.get('custom', []);
+let subject = 'All';
+const all = () => BUILT.map(([s, n, f]) => ({ s, n, f })).concat(custom.map((c, k) => ({ s: c.s || 'Mine', n: c.n, f: c.f, k })));
+
+function render() {
+  const f = $('find').value.toLowerCase(), list = all();
+  const subs = ['All', ...new Set(list.map(x => x.s))];
+  $('chips').innerHTML = subs.map(s => `<button class="${s === subject ? '' : 'ghost'} fit" data-s="${esc(s)}" style="padding:6px 12px;font-size:14px">${esc(s)}</button>`).join('');
+  $('chips').querySelectorAll('button').forEach(b => b.onclick = () => { subject = b.dataset.s; render(); });
+  const shown = list.filter(x => (subject === 'All' || x.s === subject) && (x.n + x.f + x.s).toLowerCase().includes(f));
+  $('list').innerHTML = shown.map((x, idx) => `<div class="card"><div class="muted">${esc(x.s)} · ${esc(x.n)}</div>
+    <div style="font-size:18px;margin:4px 0">${esc(x.f)}</div>
+    <div class="row"><button class="ghost" data-i="${idx}">Write on page</button>${x.k !== undefined ? `<button class="ghost fit" data-d="${x.k}">Delete</button>` : ''}</div></div>`).join('') || '<p class="muted">No formulas match.</p>';
+  $('list').querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const x = shown[+b.dataset.i]; insert(`${x.n}: ${x.f}`); });
+  $('list').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { custom.splice(+b.dataset.d, 1); db.set('custom', custom); render(); });
+}
+$('find').oninput = render;
+$('add').onclick = () => {
+  const n = $('fn').value.trim(), f = $('fe').value.trim(), s = $('fs').value.trim();
+  if (!n || !f) return;
+  custom.push({ n, f, s }); db.set('custom', custom);
+  $('fn').value = $('fe').value = $('fs').value = ''; render(); toast('Saved');
+};
+render();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "id": "formulas",
+  "name": "Formula sheet",
+  "description": "Searchable formulas for maths, stats, physics, chemistry and finance. Add your own and write any of them onto the page.",
+  "entry": "index.html",
+  "icon": "functions",
+  "version": "1.0.0",
+  "author": "Adv Notes",
+  "category": "Study"
+}

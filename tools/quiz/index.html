@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz me</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <h2>Quiz me</h2>
+  <input id="topic" placeholder="Topic (e.g. photosynthesis) — or leave empty to use your page">
+  <div class="row">
+    <select id="src"><option value="">Topic only</option><option value="selection">Lasso selection</option><option value="page">Visible page</option></select>
+    <input id="n" type="number" min="3" max="15" value="5" class="fit" style="width:80px">
+  </div>
+  <select id="level"><option>Easy</option><option selected>Medium</option><option>Hard</option></select>
+  <div class="row"><button id="start">Start quiz</button></div>
+  <div class="row"><button class="ghost" id="drill">Drill weak topics</button></div>
+  <div id="weak" class="muted"></div>
+  <div id="serr" class="err"></div>
+</div>
+
+<div id="play" class="hide">
+  <div class="muted" id="prog"></div>
+  <div class="card" id="qtext" style="font-size:18px"></div>
+  <div id="opts"></div>
+  <div id="fb" class="card hide"></div>
+  <div class="row"><button id="nextBtn" class="hide">Next</button></div>
+</div>
+
+<div id="done" class="hide">
+  <h2 id="score"></h2>
+  <div id="review"></div>
+  <div class="row"><button id="again">New quiz</button><button class="ghost" id="logit">Write score on page</button></div>
+</div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const a = t.search(/[\[{]/); if (a < 0) throw new Error('The AI did not return structured data. Try again.');
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  return JSON.parse(t.slice(a, b + 1));
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+let weak = db.get('weak', {});   // topic -> number of misses
+let qs = [], i = 0, right = 0, missed = [], topicName = '';
+const saveW = () => db.set('weak', weak);
+
+function show(id) { ['setup', 'play', 'done'].forEach(x => $(x).classList.toggle('hide', x !== id)); }
+function renderWeak() {
+  const w = Object.entries(weak).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  $('weak').innerHTML = w.length ? 'Weak spots: ' + w.slice(0, 6).map(([t, n]) => `${esc(t)} (${n})`).join(', ') : 'No weak spots recorded yet.';
+  $('drill').disabled = !w.length;
+}
+
+async function build(topic, src, n, level) {
+  const what = src ? 'the content of the attached image' + (topic ? ` (focus: ${topic})` : '') : `the topic "${topic}"`;
+  const t = await ask(`Write ${n} ${level.toLowerCase()} multiple-choice questions about ${what}. Each has exactly 4 options and one correct answer. Reply with ONLY a JSON array like [{"q":"...","options":["A","B","C","D"],"answer":0,"topic":"short subtopic","why":"one-sentence explanation"}] where answer is the index of the correct option.`, src ? { image: src } : {});
+  const arr = parseJSON(t).filter(x => x && x.q && Array.isArray(x.options) && x.options.length >= 2 && Number.isInteger(x.answer) && x.answer >= 0 && x.answer < x.options.length);
+  if (!arr.length) throw new Error('No usable questions came back. Try again.');
+  return arr;
+}
+async function begin(topic, src, n, level) {
+  $('serr').textContent = ''; $('start').disabled = $('drill').disabled = true; $('start').textContent = 'Writing questions…';
+  try {
+    qs = await build(topic, src, n, level);
+    topicName = topic || 'your page';
+    i = 0; right = 0; missed = []; show('play'); renderQ();
+  } catch (e) { $('serr').textContent = e.message; }
+  $('start').disabled = false; $('start').textContent = 'Start quiz'; renderWeak();
+}
+$('start').onclick = () => {
+  const topic = $('topic').value.trim(), src = $('src').value;
+  if (!topic && !src) { $('serr').textContent = 'Enter a topic or choose page / selection.'; return; }
+  begin(topic, src, Math.min(15, Math.max(3, +$('n').value || 5)), $('level').value);
+};
+$('drill').onclick = () => {
+  const w = Object.entries(weak).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 4).map(x => x[0]);
+  begin(w.join('; '), '', 6, $('level').value);
+};
+
+function renderQ() {
+  const q = qs[i];
+  $('prog').textContent = `Question ${i + 1} of ${qs.length} · ${right} correct`;
+  $('qtext').textContent = q.q;
+  $('fb').classList.add('hide'); $('nextBtn').classList.add('hide');
+  $('opts').innerHTML = q.options.map((o, k) => `<div class="row"><button class="ghost" data-k="${k}" style="text-align:left">${esc(o)}</button></div>`).join('');
+  $('opts').querySelectorAll('button').forEach(b => b.onclick = () => answer(+b.dataset.k));
+}
+function answer(k) {
+  const q = qs[i], ok = k === q.answer, tp = q.topic || topicName;
+  if (ok) { right++; if (weak[tp]) { weak[tp]--; } } else { weak[tp] = (weak[tp] || 0) + 1; missed.push(q); }
+  saveW();
+  $('opts').querySelectorAll('button').forEach(b => {
+    b.disabled = true;
+    if (+b.dataset.k === q.answer) { b.style.background = 'var(--good)'; b.style.color = '#fff'; }
+    else if (+b.dataset.k === k) { b.style.background = 'var(--bad)'; b.style.color = '#fff'; }
+  });
+  $('fb').classList.remove('hide');
+  $('fb').innerHTML = (ok ? '✅ Correct. ' : '❌ Not quite. ') + esc(q.why || '');
+  $('nextBtn').classList.remove('hide'); $('nextBtn').textContent = i + 1 < qs.length ? 'Next' : 'See results';
+}
+$('nextBtn').onclick = () => { i++; if (i < qs.length) renderQ(); else finish(); };
+function finish() {
+  show('done');
+  $('score').textContent = `${right} / ${qs.length} (${Math.round(right / qs.length * 100)}%)`;
+  $('review').innerHTML = missed.length ? '<p class="muted">Review these:</p>' + missed.map(q => `<div class="card">${esc(q.q)}<div class="muted">Answer: ${esc(q.options[q.answer])}</div></div>`).join('') : '<p>Perfect score! 🎉</p>';
+}
+$('again').onclick = () => { show('setup'); renderWeak(); };
+$('logit').onclick = () => insert(`Quiz on ${topicName}: ${right}/${qs.length}` + (missed.length ? '\nReview: ' + [...new Set(missed.map(q => q.topic || q.q))].join(', ') : ''));
+renderWeak();
+
+})();
+</script>
+</body>
+</html>

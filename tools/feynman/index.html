@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feynman explainer</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<h2>Feynman check</h2>
+<p class="muted">Explain a concept as if teaching a beginner. The AI looks for gaps, jargon and mistakes.</p>
+<input id="concept" placeholder="Concept (e.g. entropy)">
+<textarea id="text" rows="7" placeholder="Explain it in your own words…" style="margin-top:8px"></textarea>
+<div class="row"><button id="go">Check my explanation</button></div>
+<div class="row"><button class="ghost" id="fromPage">Use my handwriting on the page instead</button></div>
+<div id="out" class="card pre hide"></div>
+<div id="followrow" class="hide">
+  <div class="row"><input id="fu" placeholder="Ask a follow-up or revise…"><button class="fit" id="send">Send</button></div>
+  <div class="row"><button class="ghost" id="ins">Write feedback on page</button><button class="ghost" id="clr">Start over</button></div>
+</div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const a = t.search(/[\[{]/); if (a < 0) throw new Error('The AI did not return structured data. Try again.');
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  return JSON.parse(t.slice(a, b + 1));
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+const SYS = "You are a Feynman-technique tutor. The student explains a concept in their own words. Respond in this order, tersely: 1) 'Solid:' what they got right. 2) 'Gaps:' what's missing or unclear. 3) 'Errors:' anything incorrect, with the correction (say 'none' if none). 4) 'Jargon:' terms used without explanation. 5) 'Try this:' one specific question to make them think deeper. Be encouraging but honest.";
+let hist = [], last = '';
+const busy = b => { $('go').disabled = $('send').disabled = $('fromPage').disabled = b; };
+
+async function turn(userMsg, opts = {}) {
+  busy(true); $('out').classList.remove('hide'); $('out').textContent = '…';
+  try {
+    const t = await ask(userMsg, Object.assign({ system: SYS, history: hist, onText: p => { $('out').textContent = p; } }, opts));
+    last = t || $('out').textContent; $('out').textContent = last;
+    hist.push({ role: 'user', text: userMsg }, { role: 'assistant', text: last });
+    $('followrow').classList.remove('hide');
+  } catch (e) { $('out').textContent = e.message; }
+  busy(false);
+}
+$('go').onclick = () => {
+  const c = $('concept').value.trim(), t = $('text').value.trim();
+  if (!t) return $('text').focus();
+  hist = []; turn(`Concept: ${c || '(not stated)'}\nMy explanation:\n${t}`);
+};
+$('fromPage').onclick = () => {
+  const c = $('concept').value.trim();
+  hist = []; turn(`Concept: ${c || '(see image)'}\nMy explanation is the handwritten text in the attached image. Read it and give feedback.`, { image: 'page' });
+};
+$('send').onclick = () => { const v = $('fu').value.trim(); if (!v) return; $('fu').value = ''; turn(v); };
+$('fu').onkeydown = e => { if (e.key === 'Enter') $('send').click(); };
+$('ins').onclick = () => insert('Feynman check' + ($('concept').value.trim() ? ' – ' + $('concept').value.trim() : '') + ':\n' + last);
+$('clr').onclick = () => { hist = []; last = ''; $('out').classList.add('hide'); $('followrow').classList.add('hide'); $('text').value = ''; };
+
+})();
+</script>
+</body>
+</html>

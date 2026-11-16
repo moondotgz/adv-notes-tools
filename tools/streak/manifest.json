@@ -1,0 +1,10 @@
+{
+  "id": "streak",
+  "name": "Study streak",
+  "description": "Check in each day you study and watch your streak and a calendar heatmap grow.",
+  "entry": "index.html",
+  "icon": "map",
+  "version": "1.0.0",
+  "author": "Adv Notes",
+  "category": "Study"
+}

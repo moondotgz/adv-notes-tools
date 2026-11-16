@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Focus timer</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<div class="tabs"><button data-t="timer">Timer</button><button data-t="stats">Stats</button></div>
+<div id="timer">
+  <div class="row"><div class="muted" id="phase" style="text-align:center;font-size:16px"></div></div>
+  <div id="clock" style="font-size:72px;text-align:center;font-variant-numeric:tabular-nums;margin:6px 0"></div>
+  <div class="bar" style="height:8px;background:var(--field);border-radius:6px;overflow:hidden"><i id="prog" style="display:block;height:100%;background:var(--accent);width:0"></i></div>
+  <div class="row" style="margin-top:16px">
+    <button id="go">Start</button><button class="ghost" id="skip">Skip</button><button class="ghost" id="rst">Reset</button>
+  </div>
+  <input id="label" placeholder="What are you working on? (optional)">
+  <div class="row"><label class="muted">Focus<input id="cf" type="number" min="1" max="180"></label>
+    <label class="muted">Break<input id="cb" type="number" min="1" max="60"></label>
+    <label class="muted">Long break<input id="cl" type="number" min="1" max="90"></label></div>
+  <div class="muted" id="today" style="text-align:center;margin-top:8px"></div>
+</div>
+<div id="stats" class="hide">
+  <div class="card"><div class="muted">Today</div><div id="sToday" style="font-size:24px"></div></div>
+  <div class="card"><div class="muted">Last 7 days</div><div id="week" style="display:flex;gap:6px;align-items:flex-end;height:90px;margin-top:8px"></div></div>
+  <div class="card"><div class="muted">All time</div><div id="sAll" style="font-size:24px"></div></div>
+  <div class="row"><button id="logPage">Write today's summary on page</button></div>
+  <div class="row"><button class="ghost" id="clr">Clear history</button></div>
+</div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const a = t.search(/[\[{]/); if (a < 0) throw new Error('The AI did not return structured data. Try again.');
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  return JSON.parse(t.slice(a, b + 1));
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+const cfg = Object.assign({ f: 25, b: 5, l: 15 }, db.get('cfg', {}));
+let log = db.get('log', {});                 // { 'YYYY-MM-DD': minutes }
+let st = db.get('state', { mode: 'focus', count: 0, running: false, end: 0, left: 0 });
+const len = m => (m === 'focus' ? cfg.f : m === 'break' ? cfg.b : cfg.l) * 60000;
+const NAMES = { focus: '🎯 Focus', break: '☕ Short break', long: '🌴 Long break' };
+if (!st.running && !st.left) st.left = len(st.mode);
+const saveS = () => db.set('state', st);
+let timerId = null;
+
+function fmt(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+function remaining() { return st.running ? st.end - Date.now() : st.left; }
+function addMinutes(m) { const k = today(); log[k] = Math.round(((log[k] || 0) + m) * 10) / 10; db.set('log', log); }
+
+function finish(natural) {
+  if (st.mode === 'focus') {
+    const done = natural ? len('focus') : len('focus') - remaining();
+    addMinutes(done / 60000);
+    if (natural) st.count++;
+    st.mode = natural && st.count % 4 === 0 ? 'long' : 'break';
+  } else st.mode = 'focus';
+  st.running = false; st.left = len(st.mode);
+  if (natural) toast(st.mode === 'focus' ? 'Break over — time to focus' : 'Focus session done. Take a break!');
+  saveS(); render();
+}
+function render() {
+  const left = remaining(), total = len(st.mode);
+  $('phase').textContent = NAMES[st.mode] + (st.mode === 'focus' ? ` · session ${st.count % 4 + 1}` : '');
+  $('clock').textContent = fmt(left);
+  $('prog').style.width = (100 - left / total * 100) + '%';
+  $('go').textContent = st.running ? 'Pause' : (st.left < total ? 'Resume' : 'Start');
+  $('today').textContent = `Today: ${Math.round(log[today()] || 0)} min focused`;
+  document.title = st.running ? fmt(left) + ' ' + NAMES[st.mode] : 'Pomodoro';
+}
+function loop() {
+  clearInterval(timerId);
+  timerId = setInterval(() => { if (st.running && st.end - Date.now() <= 0) finish(true); else render(); }, 500);
+}
+$('go').onclick = () => {
+  if (st.running) { st.left = st.end - Date.now(); st.running = false; }
+  else { st.end = Date.now() + st.left; st.running = true; }
+  saveS(); render();
+};
+$('skip').onclick = () => finish(false);
+$('rst').onclick = () => { st.running = false; st.left = len(st.mode); saveS(); render(); };
+for (const [id, k] of [['cf', 'f'], ['cb', 'b'], ['cl', 'l']]) {
+  $(id).value = cfg[k];
+  $(id).onchange = () => {
+    cfg[k] = Math.max(1, +$(id).value || cfg[k]); $(id).value = cfg[k]; db.set('cfg', cfg);
+    if (!st.running) { st.left = len(st.mode); saveS(); render(); }
+  };
+}
+function hm(m) { m = Math.round(m); return m >= 60 ? Math.floor(m / 60) + 'h ' + m % 60 + 'm' : m + ' min'; }
+function renderStats() {
+  $('sToday').textContent = hm(log[today()] || 0);
+  const days = [], now = new Date();
+  for (let i = 6; i >= 0; i--) { const d = new Date(now); d.setDate(d.getDate() - i); const dd = new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); days.push([dd, d.toLocaleDateString(undefined, { weekday: 'short' })]); }
+  const max = Math.max(30, ...days.map(([k]) => log[k] || 0));
+  $('week').innerHTML = days.map(([k, n]) => `<div style="flex:1;text-align:center;font-size:11px;color:var(--muted)"><div style="background:var(--accent);height:${Math.round((log[k] || 0) / max * 64)}px;border-radius:4px;min-height:2px"></div>${n}</div>`).join('');
+  $('sAll').textContent = hm(Object.values(log).reduce((a, b) => a + b, 0));
+}
+$('logPage').onclick = () => {
+  const label = $('label').value.trim();
+  insert(`Study log ${today()}: ${hm(log[today()] || 0)} focused${label ? ' (' + label + ')' : ''}`);
+};
+$('clr').onclick = () => { if (confirm('Delete all study history?')) { log = {}; db.set('log', log); renderStats(); render(); } };
+
+tabs(['timer', 'stats'], t => { if (t === 'stats') renderStats(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && st.running && st.end - Date.now() <= 0) finish(true); else render(); });
+// A session that ended while the tool was closed is credited when it reopens.
+if (st.running && st.end - Date.now() <= 0) finish(true);
+render(); loop();
+
+})();
+</script>
+</body>
+</html>
