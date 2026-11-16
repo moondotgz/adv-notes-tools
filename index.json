@@ -42,6 +42,28 @@
           "sha256": "bd88805178a26c729db8c0107a5b630cb900ec070f4d8c7529a3e45530afd41d"
         }
       ]
+    },
+    {
+      "id": "tamagotchi",
+      "name": "Tamagotchi",
+      "description": "A virtual pet that lives next to your notes: feed it, play, clean up and let it sleep. It keeps getting hungry while you're away.",
+      "icon": "extension",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Fun",
+      "path": "tools/tamagotchi",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 10123,
+          "sha256": "8b41a426815f6e6c17f3a7d309e99087840bc634fc4c19d59ddc48500aaab210"
+        },
+        {
+          "path": "manifest.json",
+          "size": 315,
+          "sha256": "754ccdbc3a365e8004b37b1f351fd9c561777cc4783ae8d519931e2df54963e5"
+        }
+      ]
     }
   ]
 }

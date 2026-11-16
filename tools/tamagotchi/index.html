@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tamagotchi</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:420px; margin-inline:auto; }
+  button { font:inherit; padding:10px 6px; border-radius:10px; border:0; background:var(--accent); color:var(--bg); cursor:pointer; }
+  button:disabled { opacity:.4; cursor:default; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  .screen { background:var(--field); border-radius:20px; height:200px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .screen.night { filter:brightness(.55); }
+  #pet { font-size:92px; line-height:1; user-select:none; cursor:pointer; transition:transform .2s; }
+  #pet.bounce { animation:bounce .5s; }
+  #pet.idle { animation:idle 2.4s ease-in-out infinite; }
+  @keyframes idle { 50% { transform:translateY(-6px); } }
+  @keyframes bounce { 30% { transform:translateY(-24px) scale(1.1); } }
+  #bubble { position:absolute; top:10px; left:10px; right:10px; text-align:center; font-size:14px; color:var(--muted); min-height:20px; }
+  #poops { position:absolute; bottom:8px; right:12px; font-size:26px; }
+  #meta { display:flex; justify-content:space-between; margin:10px 2px; font-size:14px; color:var(--muted); }
+  .stat { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:14px; }
+  .stat span:first-child { width:24px; text-align:center; }
+  .bar { flex:1; height:10px; background:var(--field); border-radius:6px; overflow:hidden; }
+  .bar i { display:block; height:100%; border-radius:6px; transition:width .4s, background .4s; }
+  .actions { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:14px 0 8px; }
+  .actions button { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:13px; }
+  .actions b { font-size:22px; font-weight:400; }
+  .row { display:flex; gap:8px; }
+  .row button { flex:1; }
+  #say { color:var(--muted); font-size:14px; min-height:20px; margin:10px 0 0; }
+</style>
+</head>
+<body>
+  <div class="screen" id="screen">
+    <div id="bubble"></div>
+    <div id="pet" class="idle">🥚</div>
+    <div id="poops"></div>
+  </div>
+  <div id="meta"><span id="name"></span><span id="age"></span></div>
+
+  <div class="stat"><span>🍙</span><div class="bar"><i id="b-hunger"></i></div></div>
+  <div class="stat"><span>😊</span><div class="bar"><i id="b-happy"></i></div></div>
+  <div class="stat"><span>⚡</span><div class="bar"><i id="b-energy"></i></div></div>
+  <div class="stat"><span>❤️</span><div class="bar"><i id="b-health"></i></div></div>
+
+  <div class="actions">
+    <button id="feed"><b>🍙</b>Feed</button>
+    <button id="play"><b>🎾</b>Play</button>
+    <button id="sleep"><b>💤</b><span id="sleepLabel">Sleep</span></button>
+    <button id="clean"><b>🧼</b>Clean</button>
+  </div>
+  <div class="row">
+    <button class="ghost" id="talk">Talk to it</button>
+    <button class="ghost" id="rename">Rename</button>
+    <button class="ghost" id="note">Share on page</button>
+  </div>
+  <p id="say"></p>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const KEY = 'pet';
+  const MIN = 60 * 1000;
+  // Points lost per minute (awake). Slow enough to check in once or twice a day.
+  const RATE = { hunger: 0.12, happy: 0.08, energy: 0.05 };
+  const MAX_AWAY = 24 * 60; // minutes of absence that count toward decay
+  const clamp = v => Math.max(0, Math.min(100, v));
+
+  // --- storage: AdvNotes.storage when available, localStorage otherwise
+  const store = {
+    get() {
+      try { const v = window.AdvNotes && AdvNotes.storage ? AdvNotes.storage.get(KEY) : localStorage.getItem(KEY); return v ? JSON.parse(v) : null; } catch { return null; }
+    },
+    set(o) {
+      const s = JSON.stringify(o);
+      try { window.AdvNotes && AdvNotes.storage ? AdvNotes.storage.set(KEY, s) : localStorage.setItem(KEY, s); } catch {}
+    }
+  };
+
+  const fresh = () => ({ name: 'Pixel', born: Date.now(), last: Date.now(), hunger: 80, happy: 80, energy: 80, health: 100, poops: 0, sleeping: false, hatched: false, dead: false, sinceClean: 0 });
+  let s = store.get() || fresh();
+
+  // --- simulation
+  function tick(now) {
+    let mins = Math.min((now - s.last) / MIN, MAX_AWAY);
+    s.last = now;
+    if (mins <= 0 || s.dead) return;
+    if (!s.hatched) { if (now - s.born > 10 * 1000) s.hatched = true; return; }
+    if (s.sleeping) {
+      s.energy = clamp(s.energy + mins * 0.6);
+      s.hunger = clamp(s.hunger - mins * RATE.hunger * 0.4);
+      if (s.energy >= 100) s.sleeping = false;
+    } else {
+      s.hunger = clamp(s.hunger - mins * RATE.hunger);
+      s.happy = clamp(s.happy - mins * RATE.happy);
+      s.energy = clamp(s.energy - mins * RATE.energy);
+    }
+    s.sinceClean += mins;
+    while (s.sinceClean >= 90 && s.poops < 3) { s.poops++; s.sinceClean -= 90; }
+    if (s.poops >= 3) s.sinceClean = 0;
+    // health suffers when neglected, recovers when things are fine
+    const neglect = (s.hunger < 15) + (s.happy < 15) + (s.poops >= 2) + (s.energy < 10);
+    s.health = clamp(s.health + mins * (neglect ? -0.15 * neglect : 0.1));
+    if (s.health <= 0) s.dead = true;
+  }
+
+  // --- rendering
+  function mood() {
+    if (s.dead) return ['👻', 'Your pet has passed away…'];
+    if (!s.hatched) return ['🥚', 'Something is moving inside the egg…'];
+    if (s.sleeping) return ['😴', 'zzz…'];
+    if (s.health < 30) return ['🤒', 'I don\'t feel well…'];
+    if (s.hunger < 25) return ['😫', 'I\'m so hungry!'];
+    if (s.poops >= 2) return ['🤢', 'It smells in here…'];
+    if (s.energy < 20) return ['🥱', 'So tired…'];
+    if (s.happy < 25) return ['😢', 'I\'m bored. Play with me?'];
+    if (s.happy > 75 && s.hunger > 50) return ['🥰', 'Life is good!'];
+    return ['🙂', ''];
+  }
+  const color = v => v > 50 ? 'var(--good)' : v > 25 ? 'var(--warn)' : 'var(--bad)';
+  function bar(id, v) { const e = $(id); e.style.width = v + '%'; e.style.background = color(v); }
+  function fmtAge() {
+    const m = Math.floor((Date.now() - s.born) / MIN);
+    const d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60);
+    return d ? `${d}d ${h}h old` : h ? `${h}h ${m % 60}m old` : `${m}m old`;
+  }
+  function render() {
+    const [face, msg] = mood();
+    $('pet').textContent = face;
+    $('pet').className = s.dead || s.sleeping ? '' : 'idle';
+    $('bubble').textContent = msg;
+    $('screen').classList.toggle('night', s.sleeping);
+    $('poops').textContent = '💩'.repeat(s.poops);
+    $('name').textContent = s.dead ? s.name + ' ✝' : s.name;
+    $('age').textContent = fmtAge();
+    bar('b-hunger', s.hunger); bar('b-happy', s.happy); bar('b-energy', s.energy); bar('b-health', s.health);
+    $('sleepLabel').textContent = s.sleeping ? 'Wake' : 'Sleep';
+    const off = !s.hatched;
+    ['feed', 'play', 'clean', 'sleep', 'talk'].forEach(id => $(id).disabled = s.dead || off || (s.sleeping && id !== 'sleep' && id !== 'talk' && id !== 'clean'));
+    $('sleep').disabled = s.dead || off;
+    $('rename').disabled = false;
+    $('note').disabled = off;
+  }
+  function save() { store.set(s); }
+  function bounce() { const p = $('pet'); p.classList.remove('bounce'); void p.offsetWidth; p.classList.add('bounce'); }
+  function say(t) { $('say').textContent = t; }
+  function update() { tick(Date.now()); render(); save(); }
+
+  // --- actions
+  $('feed').onclick = () => {
+    if (s.hunger > 95) return say(`${s.name} is stuffed.`);
+    s.hunger = clamp(s.hunger + 30); s.health = clamp(s.health + 2);
+    s.sinceClean += 20; bounce(); say('Nom nom nom 🍙'); update();
+  };
+  $('play').onclick = () => {
+    if (s.energy < 10) return say(`${s.name} is too tired to play.`);
+    s.happy = clamp(s.happy + 25); s.energy = clamp(s.energy - 8); s.hunger = clamp(s.hunger - 5);
+    bounce(); say('Wheee! 🎾'); update();
+  };
+  $('sleep').onclick = () => { s.sleeping = !s.sleeping; say(s.sleeping ? 'Sweet dreams…' : 'Good morning!'); update(); };
+  $('clean').onclick = () => {
+    if (!s.poops) return say('Already spotless.');
+    s.poops = 0; s.happy = clamp(s.happy + 5); bounce(); say('Squeaky clean 🧼'); update();
+  };
+  $('pet').onclick = () => {
+    if (s.dead) { if (confirm('Start over with a new egg?')) { s = fresh(); say(''); update(); } return; }
+    if (!s.hatched || s.sleeping) return;
+    s.happy = clamp(s.happy + 2); bounce(); say(`${s.name} giggles.`); update();
+  };
+  $('rename').onclick = () => {
+    const n = prompt('Name your pet:', s.name);
+    if (n && n.trim()) { s.name = n.trim().slice(0, 20); update(); }
+  };
+  $('note').onclick = () => {
+    const [face] = mood();
+    const txt = `${face} ${s.name} (${fmtAge()}): hunger ${Math.round(s.hunger)}%, happiness ${Math.round(s.happy)}%, energy ${Math.round(s.energy)}%`;
+    try { window.AdvNotes && AdvNotes.insertText(txt); say('Written on your page.'); } catch (e) { say(e.message); }
+  };
+  $('talk').onclick = async () => {
+    const [, msg] = mood();
+    if (!window.AdvNotes || !AdvNotes.ask) return say(msg || `${s.name} chirps happily.`);
+    say('…');
+    try {
+      await AdvNotes.ask(`You are a tiny virtual pet named ${s.name}. Your stats out of 100: hunger ${Math.round(s.hunger)} (low = hungry), happiness ${Math.round(s.happy)}, energy ${Math.round(s.energy)}, health ${Math.round(s.health)}. Say one short, cute sentence in character reflecting how you feel. No quotes.`, { onText: t => say(t) });
+    } catch (e) { say(msg || e.message); }
+  };
+
+  update();
+  setInterval(update, 15 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) update(); });
+})();
+</script>
+</body>
+</html>
