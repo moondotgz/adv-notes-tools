@@ -2,6 +2,38 @@
   "format": 1,
   "tools": [
     {
+      "id": "epubreader",
+      "name": "EPUB reader",
+      "description": "Read EPUB books next to your notes: contents, bookmarks, search, text size and themes, quote a passage, ask AI about a section",
+      "icon": "book",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/epubreader",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 36247,
+          "sha256": "fc0776a55836d73010a912c4a749743863a774b6a4f0009618c60cc2a5a9968c"
+        },
+        {
+          "path": "manifest.json",
+          "size": 310,
+          "sha256": "0254a76aa0e0e5696bb627f41ff9255974d3091f77b1b0173b23c55f2ff5b415"
+        },
+        {
+          "path": "jszip/LICENSE",
+          "size": 33753,
+          "sha256": "566c953c6090b1218ca6217dd7359d45dde46581968586dc607d59a78af6a9c4"
+        },
+        {
+          "path": "jszip/jszip.min.js",
+          "size": 97630,
+          "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e"
+        }
+      ]
+    },
+    {
       "id": "feynman",
       "name": "Feynman explainer",
       "description": "Explain a concept in your own words and the AI points out gaps, errors and jargon, then asks a deeper question.",
