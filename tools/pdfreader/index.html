@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>PDF reader</title>
+<style>
+  :root {
+    --bg: #f4f5f8; --panel: #ffffff; --fg: #1b1c20; --muted: #6b6f7a; --line: #e2e4ea;
+    --accent: #2d4bd8; --accent-fg: #fff; --hl: #fff3a3; --page-shadow: 0 1px 4px rgba(0,0,0,.18);
+  }
+  [data-theme="dark"] {
+    --bg: #131417; --panel: #1d1f24; --fg: #e8e9ee; --muted: #9a9eab; --line: #30333b;
+    --accent: #b3c3ff; --accent-fg: #10131f; --hl: #5a5220; --page-shadow: 0 1px 4px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 15px system-ui, sans-serif; overflow: hidden; }
+  button, input { font: inherit; color: inherit; }
+  button { background: none; border: 0; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+  button:active { background: var(--line); }
+  button.primary { background: var(--accent); color: var(--accent-fg); }
+  .bar { display: flex; align-items: center; gap: 2px; padding: 4px 6px; background: var(--panel); border-bottom: 1px solid var(--line); height: 48px; }
+  .bar .title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; padding: 0 6px; }
+  .bar .pg { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  #app { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  #main { flex: 1; display: flex; min-height: 0; position: relative; }
+  #side { width: 0; overflow: hidden; background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; transition: width .15s; }
+  #side.open { width: min(300px, 75%); }
+  @media (max-width: 520px) { #side.open { position: absolute; z-index: 5; top: 0; bottom: 0; left: 0; width: 82%; box-shadow: 4px 0 16px rgba(0,0,0,.25); } }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .tabs button { flex: 1; border-radius: 0; padding: 10px 4px; color: var(--muted); font-size: 13px; }
+  .tabs button.on { color: var(--accent); box-shadow: inset 0 -2px var(--accent); }
+  .list { flex: 1; overflow: auto; padding: 4px 0; }
+  .item { display: block; width: 100%; text-align: left; padding: 8px 12px; border-radius: 0; line-height: 1.3; }
+  .item .p { float: right; color: var(--muted); font-size: 12px; margin-left: 8px; }
+  .item.l1 { padding-left: 24px; } .item.l2 { padding-left: 36px; } .item.l3 { padding-left: 48px; }
+  .item .ctx { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .item mark { background: var(--hl); color: inherit; }
+  .empty { color: var(--muted); padding: 16px; font-size: 14px; }
+  .search { padding: 8px; border-bottom: 1px solid var(--line); }
+  .search input { width: 100%; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); }
+  #view { flex: 1; overflow: auto; position: relative; -webkit-overflow-scrolling: touch; }
+  #pages { padding: 12px 0 40px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .page { position: relative; background: #fff; box-shadow: var(--page-shadow); }
+  .page canvas { display: block; width: 100%; height: 100%; }
+  .page .num { position: absolute; right: 6px; bottom: 4px; font-size: 11px; color: #999; }
+  .page .bm { position: absolute; right: 8px; top: -2px; width: 14px; height: 22px; background: #e5484d; clip-path: polygon(0 0,100% 0,100% 100%,50% 75%,0 100%); }
+  #home { padding: 24px; max-width: 560px; margin: 0 auto; }
+  #home h2 { margin: 8px 0 4px; font-size: 18px; }
+  #home p { color: var(--muted); margin: 4px 0 16px; }
+  .file { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+  .file button.open { flex: 1; text-align: left; padding: 12px 4px; }
+  .file small { color: var(--muted); display: block; }
+  #toast { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.show { opacity: .92; }
+  #ai { position: absolute; left: 8px; right: 8px; bottom: 8px; max-height: 55%; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; box-shadow: 0 4px 18px rgba(0,0,0,.2); display: none; white-space: pre-wrap; line-height: 1.4; }
+  #ai .actions { display: flex; gap: 6px; margin-top: 8px; justify-content: flex-end; }
+  .hidden { display: none !important; }
+  #menu { position: absolute; right: 6px; top: 50px; z-index: 10; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+          box-shadow: 0 6px 20px rgba(0,0,0,.22); padding: 4px; display: none; min-width: 230px; }
+  #menu button { display: block; width: 100%; text-align: left; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bar">
+    <button id="btnSide" title="Contents, bookmarks, search">☰</button>
+    <button id="btnHome" title="Library">⌂</button>
+    <div class="title" id="title">PDF reader</div>
+    <span class="pg" id="pg"></span>
+    <button id="btnZoomOut" title="Zoom out">−</button>
+    <button id="btnZoomIn" title="Zoom in">+</button>
+    <button id="btnBookmark" title="Bookmark this page">☆</button>
+    <button id="btnMore" title="More">⋯</button>
+  </div>
+  <div id="main">
+    <div id="side">
+      <div class="tabs">
+        <button data-tab="toc" class="on">Contents</button>
+        <button data-tab="bookmarks">Bookmarks</button>
+        <button data-tab="search">Search</button>
+      </div>
+      <div class="search hidden" id="searchBox"><input id="q" type="search" placeholder="Search in document…" enterkeyhint="search"></div>
+      <div class="list" id="sideList"></div>
+    </div>
+    <div id="view">
+      <div id="home"></div>
+      <div id="pages" class="hidden"></div>
+    </div>
+    <div id="ai"><div id="aiText"></div><div class="actions"><button id="aiInsert">Write on page</button><button id="aiClose">Close</button></div></div>
+  </div>
+  <div id="menu">
+    <button data-act="cite">Cite this page in my notes</button>
+    <button data-act="summary">Summarise this page (AI)</button>
+    <button data-act="explain">Explain this page (AI)</button>
+    <button data-act="ask">Ask about this page (AI)…</button>
+    <button data-act="goto">Go to page…</button>
+    <button data-act="open">Open another PDF…</button>
+  </div>
+  <div id="toast"></div>
+</div>
+
+<!-- The app injects the AdvNotes API before the page loads; including it here is a fallback for
+     WebView versions without document-start scripts (it does nothing if already present). -->
+<script src="../lib/advnotes.js"></script>
+<script>
+  // Show startup problems instead of a blank page.
+  function showFatal(msg) {
+    var h = document.getElementById('home');
+    if (!h) return;
+    h.innerHTML = '<h2>The PDF reader couldn\u2019t start</h2><p style="white-space:pre-wrap">' +
+      String(msg).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }) + '</p>';
+  }
+  window.addEventListener('error', function (e) { showFatal((e.message || 'Script error') + (e.filename ? '\n' + e.filename + ':' + e.lineno : '')); });
+  window.addEventListener('unhandledrejection', function (e) { showFatal(e.reason && e.reason.message || e.reason); });
+  if (!window.AdvNotes) showFatal('The app bridge (AdvNotes) is missing.');
+  // If the module below can't load at all (e.g. a blocked import), say so after a moment.
+  setTimeout(function () { if (!window.__pdfReaderStarted) showFatal('The reader script did not load. Please update Android System WebView from the Play Store.'); }, 4000);
+</script>
+<script type="module">
+window.__pdfReaderStarted = true;
+import * as pdfjsLib from './pdfjs/pdf.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('./pdfjs/pdf.worker.min.js', import.meta.url).href;
+
+const A = window.AdvNotes;   // injected by the app; see docs/TOOLS.md
+const $ = (id) => document.getElementById(id);
+const state = { doc: null, file: null, zoom: 1, pages: [], current: 1, outline: [], tab: 'toc', hits: [], searchToken: 0 };
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1800); }
+function esc(s) { return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+const store = {
+  docs() { return A.storage.getJSON('docs', {}); },
+  saveDoc(name, patch) { const d = this.docs(); d[name] = Object.assign({ bookmarks: [] }, d[name], patch); A.storage.setJSON('docs', d); return d[name]; },
+  doc(name) { return Object.assign({ bookmarks: [], page: 1, zoom: 1 }, this.docs()[name]); },
+  forget(name) { const d = this.docs(); delete d[name]; A.storage.setJSON('docs', d); }
+};
+
+// ---------------------------------------------------------------- library (home)
+async function showHome() {
+  state.doc = null; state.file = null;
+  $('pages').classList.add('hidden'); $('home').classList.remove('hidden');
+  $('title').textContent = 'PDF reader'; $('pg').textContent = '';
+  $('side').classList.remove('open');
+  const files = (await A.files()).filter((f) => /\.pdf$/i.test(f.name));
+  const docs = store.docs();
+  $('home').innerHTML = `
+    <h2>Your PDFs</h2>
+    <p>Open textbooks, worksheets or slides next to your notes. Contents (table of contents), bookmarks and your
+       reading position are remembered per document.</p>
+    <button class="primary" id="btnOpen">Open a PDF…</button>
+    <div style="margin-top:16px">${files.length ? '' : '<div class="empty">No PDFs yet.</div>'}
+    ${files.map((f) => `<div class="file"><button class="open" data-name="${esc(f.name)}">${esc(f.name)}
+        <small>${f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB'}${docs[f.name] ? ` · page ${docs[f.name].page || 1}` +
+        ((docs[f.name].bookmarks || []).length ? ` · ${docs[f.name].bookmarks.length} bookmark(s)` : '') : ''}</small></button>
+        <button class="del" data-name="${esc(f.name)}" title="Remove">✕</button></div>`).join('')}</div>`;
+  $('btnOpen').onclick = pick;
+  $('home').querySelectorAll('button.open').forEach((b) => b.onclick = () => openFile(files.find((f) => f.name === b.dataset.name)));
+  $('home').querySelectorAll('button.del').forEach((b) => b.onclick = async () => {
+    if (!confirm(`Remove “${b.dataset.name}” from the reader?`)) return;
+    await A.deleteFile(b.dataset.name); store.forget(b.dataset.name); showHome();
+  });
+}
+
+async function pick() {
+  const f = await A.pickFile(['application/pdf']);
+  if (f) openFile(f);
+}
+
+// ---------------------------------------------------------------- document
+async function openFile(f) {
+  try {
+    const doc = await pdfjsLib.getDocument({ url: f.url, isEvalSupported: false }).promise;
+    state.doc = doc; state.file = f;
+    const saved = store.doc(f.name);
+    state.zoom = saved.zoom || 1;
+    A.storage.set('last', f.name);
+    $('home').classList.add('hidden'); $('pages').classList.remove('hidden');
+    $('title').textContent = f.name.replace(/\.pdf$/i, '');
+    state.outline = await flattenOutline(doc);
+    await layoutPages();
+    goTo(saved.page || 1, false);
+    state.current = Math.max(1, Math.min(doc.numPages, saved.page || 1));
+    $('pg').textContent = `${state.current} / ${doc.numPages}`;
+    updateBookmarkBtn();
+    state.tab = state.outline.length ? 'toc' : 'bookmarks';
+    renderSide();
+  } catch (e) {
+    toast('Couldn’t open: ' + e.message);
+    showHome();
+  }
+}
+
+async function flattenOutline(doc) {
+  const out = [];
+  const outline = await doc.getOutline().catch(() => null);
+  async function walk(items, level) {
+    for (const it of items || []) {
+      let page = null;
+      try {
+        let dest = it.dest;
+        if (typeof dest === 'string') dest = await doc.getDestination(dest);
+        if (Array.isArray(dest) && dest[0]) page = (typeof dest[0] === 'object' ? await doc.getPageIndex(dest[0]) : dest[0]) + 1;
+      } catch (e) { /* unresolved destination */ }
+      out.push({ title: it.title, level, page });
+      await walk(it.items, Math.min(level + 1, 3));
+    }
+  }
+  await walk(outline, 0);
+  return out;
+}
+
+async function layoutPages() {
+  const host = $('pages');
+  host.innerHTML = '';
+  state.pages = [];
+  const avail = $('view').clientWidth - 24;
+  const bms = new Set(store.doc(state.file.name).bookmarks.map((b) => b.page));
+  for (let i = 1; i <= state.doc.numPages; i++) {
+    const page = await state.doc.getPage(i);
+    const vp = page.getViewport({ scale: 1 });
+    const scale = (avail / vp.width) * state.zoom;
+    const w = Math.round(vp.width * scale), h = Math.round(vp.height * scale);
+    const el = document.createElement('div');
+    el.className = 'page'; el.style.width = w + 'px'; el.style.height = h + 'px'; el.dataset.n = i;
+    el.innerHTML = `<span class="num">${i}</span>${bms.has(i) ? '<span class="bm"></span>' : ''}`;
+    host.appendChild(el);
+    state.pages.push({ el, page, scale, rendered: false });
+  }
+  observe();
+}
+
+let io;
+function observe() {
+  io && io.disconnect();
+  io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) render(+e.target.dataset.n);
+  }, { root: $('view'), rootMargin: '600px 0px' });
+  state.pages.forEach((p) => io.observe(p.el));
+}
+
+async function render(n) {
+  const p = state.pages[n - 1];
+  if (!p || p.rendered) return;
+  p.rendered = true;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const vp = p.page.getViewport({ scale: p.scale * dpr });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+  p.el.prepend(canvas);
+  try { await p.page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise; }
+  catch (e) { p.rendered = false; canvas.remove(); }
+}
+
+function goTo(n, smooth = true) {
+  n = Math.max(1, Math.min(state.doc.numPages, n | 0));
+  const el = state.pages[n - 1].el;
+  $('view').scrollTo({ top: el.offsetTop - 8, behavior: smooth ? 'smooth' : 'auto' });
+  if (window.innerWidth <= 520) $('side').classList.remove('open');
+}
+
+let saveT;
+$('view').addEventListener('scroll', () => {
+  if (!state.doc) return;
+  const mid = $('view').scrollTop + $('view').clientHeight / 3;
+  let cur = 1;
+  for (const p of state.pages) { if (p.el.offsetTop <= mid) cur = +p.el.dataset.n; else break; }
+  if (cur !== state.current) {
+    state.current = cur;
+    $('pg').textContent = `${cur} / ${state.doc.numPages}`;
+    updateBookmarkBtn();
+    clearTimeout(saveT); saveT = setTimeout(() => store.saveDoc(state.file.name, { page: cur }), 400);
+  }
+});
+
+async function setZoom(z) {
+  if (!state.doc) return;
+  const keep = state.current;
+  state.zoom = Math.max(0.5, Math.min(4, z));
+  store.saveDoc(state.file.name, { zoom: state.zoom });
+  await layoutPages();
+  goTo(keep, false);
+}
+
+// ---------------------------------------------------------------- side panel: contents / bookmarks / search
+function renderSide() {
+  document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === state.tab));
+  $('searchBox').classList.toggle('hidden', state.tab !== 'search');
+  const list = $('sideList');
+  if (!state.doc) { list.innerHTML = '<div class="empty">Open a PDF first.</div>'; return; }
+  if (state.tab === 'toc') {
+    list.innerHTML = state.outline.length
+      ? state.outline.map((o, i) => `<button class="item l${o.level}" data-i="${i}">${o.page ? `<span class="p">${o.page}</span>` : ''}${esc(o.title)}</button>`).join('')
+      : '<div class="empty">This PDF has no table of contents. Use bookmarks (☆) to mark important pages, or search.</div>';
+    list.querySelectorAll('.item').forEach((b) => b.onclick = () => { const o = state.outline[+b.dataset.i]; if (o.page) goTo(o.page); });
+  } else if (state.tab === 'bookmarks') {
+    const bms = store.doc(state.file.name).bookmarks.sort((a, b) => a.page - b.page);
+    list.innerHTML = bms.length
+      ? bms.map((b, i) => `<div class="file"><button class="open item" data-p="${b.page}"><span class="p">p. ${b.page}</span>${esc(b.label)}</button>
+          <button data-i="${i}" class="rename" title="Rename">✎</button><button data-i="${i}" class="del" title="Delete">✕</button></div>`).join('')
+      : '<div class="empty">No bookmarks yet. Tap ☆ in the top bar to bookmark the page you are reading.</div>';
+    list.querySelectorAll('.open').forEach((b) => b.onclick = () => goTo(+b.dataset.p));
+    list.querySelectorAll('.rename').forEach((b) => b.onclick = () => {
+      const all = store.doc(state.file.name).bookmarks.sort((a, c) => a.page - c.page);
+      const label = prompt('Bookmark name', all[+b.dataset.i].label);
+      if (label) { all[+b.dataset.i].label = label; store.saveDoc(state.file.name, { bookmarks: all }); renderSide(); }
+    });
+    list.querySelectorAll('.del').forEach((b) => b.onclick = () => {
+      const all = store.doc(state.file.name).bookmarks.sort((a, c) => a.page - c.page);
+      all.splice(+b.dataset.i, 1); store.saveDoc(state.file.name, { bookmarks: all }); renderSide(); refreshBookmarkMarks();
+    });
+  } else {
+    list.innerHTML = state.hits.length
+      ? state.hits.map((h, i) => `<button class="item" data-i="${i}"><span class="p">p. ${h.page}</span><span class="ctx">${h.ctx}</span></button>`).join('')
+      : `<div class="empty">${$('q').value ? 'No matches.' : 'Type to search the whole document.'}</div>`;
+    list.querySelectorAll('.item').forEach((b) => b.onclick = () => goTo(state.hits[+b.dataset.i].page));
+  }
+}
+
+const textCache = new Map();
+async function pageText(n) {
+  if (!textCache.has(n)) {
+    const tc = await (await state.doc.getPage(n)).getTextContent();
+    textCache.set(n, tc.items.map((i) => i.str).join(' ').replace(/\s+/g, ' '));
+  }
+  return textCache.get(n);
+}
+
+let searchT;
+$('q').addEventListener('input', () => { clearTimeout(searchT); searchT = setTimeout(runSearch, 300); });
+async function runSearch() {
+  const q = $('q').value.trim();
+  const token = ++state.searchToken;
+  state.hits = [];
+  if (!q || !state.doc) { renderSide(); return; }
+  const ql = q.toLowerCase();
+  for (let n = 1; n <= state.doc.numPages; n++) {
+    const t = await pageText(n);
+    if (token !== state.searchToken) return;
+    const tl = t.toLowerCase();
+    let at = tl.indexOf(ql);
+    let count = 0;
+    while (at >= 0 && count < 3) {
+      const ctx = esc(t.slice(Math.max(0, at - 40), at)) + '<mark>' + esc(t.substr(at, q.length)) + '</mark>' + esc(t.substr(at + q.length, 60));
+      state.hits.push({ page: n, ctx: '…' + ctx + '…' });
+      at = tl.indexOf(ql, at + ql.length); count++;
+    }
+    if (n % 10 === 0 || n === state.doc.numPages) renderSide();
+  }
+}
+
+document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
+  state.tab = b.dataset.tab; renderSide(); if (state.tab === 'search') $('q').focus();
+});
+
+// ---------------------------------------------------------------- bookmarks
+function updateBookmarkBtn() {
+  if (!state.doc) return;
+  const has = store.doc(state.file.name).bookmarks.some((b) => b.page === state.current);
+  $('btnBookmark').textContent = has ? '★' : '☆';
+}
+function refreshBookmarkMarks() {
+  const set = new Set(store.doc(state.file.name).bookmarks.map((b) => b.page));
+  for (const p of state.pages) {
+    const m = p.el.querySelector('.bm');
+    const n = +p.el.dataset.n;
+    if (set.has(n) && !m) p.el.insertAdjacentHTML('beforeend', '<span class="bm"></span>');
+    if (!set.has(n) && m) m.remove();
+  }
+  updateBookmarkBtn();
+}
+async function sectionFor(page) {
+  let best = null;
+  for (const o of state.outline) if (o.page && o.page <= page && (!best || o.page >= best.page)) best = o;
+  return best ? best.title : null;
+}
+$('btnBookmark').onclick = async () => {
+  if (!state.doc) return;
+  const d = store.doc(state.file.name);
+  const i = d.bookmarks.findIndex((b) => b.page === state.current);
+  if (i >= 0) { d.bookmarks.splice(i, 1); toast('Bookmark removed'); }
+  else {
+    const label = (await sectionFor(state.current)) || `Page ${state.current}`;
+    d.bookmarks.push({ page: state.current, label }); toast('Bookmarked page ' + state.current);
+  }
+  store.saveDoc(state.file.name, { bookmarks: d.bookmarks });
+  refreshBookmarkMarks();
+  if (state.tab === 'bookmarks') renderSide();
+};
+
+// ---------------------------------------------------------------- more menu: cite / AI / go to page
+function pageImage(n) {
+  const c = state.pages[n - 1].el.querySelector('canvas');
+  return c ? c.toDataURL('image/png') : null;
+}
+let lastAi = '';
+async function askAboutPage(question) {
+  const img = pageImage(state.current);
+  if (!img) { toast('Page is still rendering'); return; }
+  $('ai').style.display = 'block'; $('aiText').textContent = 'Thinking…';
+  try {
+    lastAi = await A.ask(question, {
+      image: img,
+      system: 'You help a student read a textbook page next to their notes. Answer in plain text (no Markdown, no LaTeX); use Unicode for math.',
+      onText: (t) => { $('aiText').textContent = t; }
+    });
+    $('aiText').textContent = lastAi;
+  } catch (e) { $('aiText').textContent = e.message; }
+}
+$('aiClose').onclick = () => { $('ai').style.display = 'none'; };
+$('aiInsert').onclick = () => { if (lastAi) { A.insertText(lastAi); toast('Added to your notes'); } };
+
+$('btnMore').onclick = (e) => {
+  e.stopPropagation();
+  if (!state.doc) { pick(); return; }
+  const m = $('menu'); m.style.display = m.style.display === 'block' ? 'none' : 'block';
+};
+document.addEventListener('click', () => { $('menu').style.display = 'none'; });
+$('menu').querySelectorAll('button').forEach((b) => b.onclick = async () => {
+  $('menu').style.display = 'none';
+  const section = await sectionFor(state.current);
+  switch (b.dataset.act) {
+    case 'cite':
+      A.insertText(`→ ${$('title').textContent}, p. ${state.current}${section ? ` (${section})` : ''}`);
+      toast('Citation added to your notes'); break;
+    case 'summary': askAboutPage('Summarise this page in a few short bullet points (use "•").'); break;
+    case 'explain': askAboutPage('Explain the content of this page step by step, as if to a student seeing it for the first time.'); break;
+    case 'ask': { const q = prompt('Your question about this page'); if (q) askAboutPage(q); break; }
+    case 'goto': { const n = prompt(`Go to page (1–${state.doc.numPages})`, String(state.current)); if (n) goTo(parseInt(n, 10)); break; }
+    case 'open': pick(); break;
+  }
+});
+
+$('btnSide').onclick = () => { $('side').classList.toggle('open'); renderSide(); };
+$('btnHome').onclick = showHome;
+$('btnZoomIn').onclick = () => setZoom(state.zoom * 1.25);
+$('btnZoomOut').onclick = () => setZoom(state.zoom / 1.25);
+let resizeT;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (state.doc) setZoom(state.zoom); }, 250); });
+
+// reopen the last document
+(async () => {
+  const last = A.storage.get('last');
+  const files = await A.files();
+  const f = last && files.find((x) => x.name === last);
+  if (f) openFile(f); else showHome();
+})();
+</script>
+</body>
+</html>

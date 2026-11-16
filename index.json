@@ -1,0 +1,47 @@
+{
+  "format": 1,
+  "tools": [
+    {
+      "id": "pdfreader",
+      "name": "PDF reader",
+      "description": "Read PDFs next to your notes: table of contents, bookmarks, search, cite a page, ask AI about a page",
+      "icon": "book",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/pdfreader",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 23333,
+          "sha256": "ea99c5558550426bb432061330387b2236f03761c21a721607e02b8e963b7ea7"
+        },
+        {
+          "path": "manifest.json",
+          "size": 282,
+          "sha256": "ecc5213c61969d41fb63e799fdc953070504af6118a362d7121e514e598242a5"
+        },
+        {
+          "path": "pdfjs/LICENSE",
+          "size": 10174,
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "path": "pdfjs/README",
+          "size": 120,
+          "sha256": "bbd76318c90230c44bff07d5001b1d0dee4333b67e4bc03abe4f82a81be0a446"
+        },
+        {
+          "path": "pdfjs/pdf.min.js",
+          "size": 398237,
+          "sha256": "44ec6f011027ee77791386b66c14876a5fc29e20bf0433c07c6726fff7212b72"
+        },
+        {
+          "path": "pdfjs/pdf.worker.min.js",
+          "size": 1417586,
+          "sha256": "bd88805178a26c729db8c0107a5b630cb900ec070f4d8c7529a3e45530afd41d"
+        }
+      ]
+    }
+  ]
+}

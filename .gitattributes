@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Hashes in index.json are of the exact bytes; never rewrite line endings.
+* -text

@@ -1,0 +1,9 @@
+{
+  "id": "unit-converter",
+  "name": "Unit converter",
+  "description": "Example web tool: converts units and writes the result onto the page.",
+  "entry": "index.html",
+  "icon": "functions",
+  "version": "1.0",
+  "author": "you"
+}

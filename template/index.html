@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg: #fff; --fg: #1a1a1a; --muted: #666; --accent: #2d4bd8; --field: #f2f3f7; }
+  [data-theme="dark"] { --bg: #1b1c20; --fg: #e8e8ec; --muted: #9a9aa5; --accent: #b3c3ff; --field: #2a2c33; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg); font: 16px system-ui, sans-serif; }
+  input, select, button { font: inherit; padding: 10px; border-radius: 10px; border: 0; background: var(--field); color: var(--fg); }
+  button { background: var(--accent); color: var(--bg); }
+  .row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .out { font-size: 24px; margin: 12px 0; }
+</style>
+</head>
+<body>
+  <div class="row"><input id="v" type="number" value="1" style="flex:1"><select id="u">
+    <option value="1.609344|mi|km">mi → km</option>
+    <option value="0.0254|in|m">in → m</option>
+    <option value="0.45359237|lb|kg">lb → kg</option>
+  </select></div>
+  <div class="out" id="out"></div>
+  <button id="insert">Write on page</button>
+  <button id="explain">Ask AI to explain</button>
+  <p id="ai" style="color:var(--muted)"></p>
+<script>
+  // window.AdvNotes is injected by the app (see docs/TOOLS.md).
+  const $ = id => document.getElementById(id);
+  function result() {
+    const [f, a, b] = $('u').value.split('|');
+    const v = parseFloat($('v').value || '0');
+    return `${v} ${a} = ${+(v * f).toPrecision(6)} ${b}`;
+  }
+  function update() { $('out').textContent = result(); AdvNotes.storage.set('last', $('v').value); }
+  $('v').value = AdvNotes.storage.get('last') || '1';
+  $('v').oninput = $('u').onchange = update;
+  $('insert').onclick = () => AdvNotes.insertText(result());
+  $('explain').onclick = async () => {
+    $('ai').textContent = '…';
+    try {
+      await AdvNotes.ask('Explain this conversion briefly: ' + result(), { onText: t => $('ai').textContent = t });
+    } catch (e) { $('ai').textContent = e.message; }
+  };
+  update();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "id": "pdfreader",
+  "name": "PDF reader",
+  "description": "Read PDFs next to your notes: table of contents, bookmarks, search, cite a page, ask AI about a page",
+  "entry": "index.html",
+  "icon": "book",
+  "version": "1.0.0",
+  "author": "Adv Notes",
+  "category": "Study"
+}
