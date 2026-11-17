@@ -38,20 +38,20 @@
       "name": "Feynman explainer",
       "description": "Explain a concept in your own words and the AI points out gaps, errors and jargon, then asks a deeper question.",
       "icon": "chat",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/feynman",
       "files": [
         {
           "path": "index.html",
-          "size": 6607,
-          "sha256": "399a1c0402995c505d32e8dc83e52307af6845ca577e75a009b1eddfad9da0d6"
+          "size": 6739,
+          "sha256": "8c7742434a3581cf77b02256d74bb890a86f32096c6d5aba580b68c4f6933d32"
         },
         {
           "path": "manifest.json",
           "size": 298,
-          "sha256": "e74bc305332272809d33b6f5a581097cfe8c3b68e132a1d433c2c081b70a1e3d"
+          "sha256": "08071d4f071619ef509fe2db8695cdfb2530a787b492519e3db4d23db2dde53f"
         }
       ]
     },
@@ -60,20 +60,20 @@
       "name": "Flashcards",
       "description": "Spaced-repetition flashcards. Add cards by hand or let the AI write them from your page, then review what's due.",
       "icon": "book",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/flashcards",
       "files": [
         {
           "path": "index.html",
-          "size": 9958,
-          "sha256": "07676c0881606a94955648786409d249db6905ff67b7d7f5e88b51abbf706cfd"
+          "size": 10090,
+          "sha256": "2073337f63076ed41597c6fe13147719124889f7042f17b0367506df1ef56004"
         },
         {
           "path": "manifest.json",
           "size": 295,
-          "sha256": "ac58fa20a489bbec4e43412e44088b8045557b2a195d6c323693c22810036d24"
+          "sha256": "8236dc920972c1b7257b824b4275e321c8ad07db4d835e9f826bbcf7fe5da033"
         }
       ]
     },
@@ -104,20 +104,20 @@
       "name": "Formula sheet",
       "description": "Searchable formulas for maths, stats, physics, chemistry and finance. Add your own and write any of them onto the page.",
       "icon": "functions",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/formulas",
       "files": [
         {
           "path": "index.html",
-          "size": 8456,
-          "sha256": "6647998d156c4636f6bf41d9ab63ce323b9e5a0666c5af6cf272f441ff9b6f16"
+          "size": 8588,
+          "sha256": "683e5823678b7a7162a0375ae34f1bc4da61ecb1348a1ce9803aa340851e73f6"
         },
         {
           "path": "manifest.json",
           "size": 308,
-          "sha256": "1a6897077d517e05feeaac4f7735c74cd311eac4dcb10381971a04498bcadca9"
+          "sha256": "9934a666e2c7ceb3a6c24eb1bde3260726203e0425b92d09c45cd68861d70274"
         }
       ]
     },
@@ -126,20 +126,20 @@
       "name": "Glossary builder",
       "description": "Collect terms as you study, let the AI define them or find them on your page, then write the glossary onto the page.",
       "icon": "translate",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/glossary",
       "files": [
         {
           "path": "index.html",
-          "size": 7529,
-          "sha256": "9e541ddbfc955cb3d8ce6e6589d49fdcebe980e3aa70325a48e4ae395b6916af"
+          "size": 7661,
+          "sha256": "7ce3bdaae7ac23d0db714c6e1a555e03751446f8e9ca9a2617240e9f0f980c48"
         },
         {
           "path": "manifest.json",
           "size": 308,
-          "sha256": "d23c362a58f358d58f1bc61ba5acd60bafba0568a3f53f3574562cc27e1f1438"
+          "sha256": "afa2bc69c97e5c85006e241257d7d4d011de73e2e653948044e5193a7719ef7d"
         }
       ]
     },
@@ -190,20 +190,20 @@
       "name": "Quiz me",
       "description": "The AI writes a multiple-choice quiz from a topic or your page, marks your answers and remembers your weak topics so you can drill them.",
       "icon": "science",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/quiz",
       "files": [
         {
           "path": "index.html",
-          "size": 9273,
-          "sha256": "5b2c47b08ba48701e6ac1538cf3f95cc551c9ccf536d31c57eb4cde72dd0f46e"
+          "size": 9405,
+          "sha256": "81365163f2de5b13f9637a164d00d9eeb1a441fe49449693e626a2b201893203"
         },
         {
           "path": "manifest.json",
           "size": 313,
-          "sha256": "058d12ca006e77dbbe79c673ade0ccbb2975cf92329d4b22a33d085129fac066"
+          "sha256": "277ebabb3edda0380e96b0ae38bb3635fa62003cf0a87a78c1e0501f8af842f8"
         }
       ]
     },

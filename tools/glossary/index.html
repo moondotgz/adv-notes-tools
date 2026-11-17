@@ -73,10 +73,11 @@ async function ask(prompt, opts = {}) {
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const a = t.search(/[\[{]/); if (a < 0) throw new Error('The AI did not return structured data. Try again.');
+  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
-  return JSON.parse(t.slice(a, b + 1));
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw bad(); }
 }
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
 const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);

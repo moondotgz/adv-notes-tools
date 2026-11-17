@@ -4,7 +4,7 @@
   "description": "Spaced-repetition flashcards. Add cards by hand or let the AI write them from your page, then review what's due.",
   "entry": "index.html",
   "icon": "book",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Adv Notes",
   "category": "Study"
 }
