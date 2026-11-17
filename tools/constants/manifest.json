@@ -1,0 +1,10 @@
+{
+  "id": "constants",
+  "name": "Constants",
+  "description": "Physical, chemical, maths and astronomy constants with units. Search, copy, add your own and write any of them onto the page.",
+  "entry": "index.html",
+  "icon": "science",
+  "version": "1.0.0",
+  "author": "Adv Notes",
+  "category": "Study"
+}

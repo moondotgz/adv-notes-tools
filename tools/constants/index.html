@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Constants</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<input id="find" placeholder="Search constants (name, symbol, unit)">
+<div class="row" id="chips" style="flex-wrap:wrap"></div>
+<div id="list"></div>
+<details style="margin-top:16px"><summary class="muted">Add your own</summary>
+  <div class="row"><input id="cn" placeholder="Name (e.g. Density of water)"></div>
+  <div class="row"><input id="cs" placeholder="Symbol (e.g. ρ)"><input id="cv" placeholder="Value (e.g. 1000)"></div>
+  <div class="row"><input id="cu" placeholder="Unit (e.g. kg/m³)"><input id="cc" placeholder="Category (e.g. Mine)"></div>
+  <div class="row"><button id="add">Save constant</button></div>
+</details>
+<p class="muted" style="margin-top:16px">Values from CODATA 2018 / SI 2019; “exact” ones are defined exactly.</p>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const a = t.search(/[\[{]/); if (a < 0) throw bad();
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw bad(); }
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+// [category, name, symbol, value, unit, note]
+const BUILT = [
+ ['Universal','Speed of light in vacuum','c','2.99792458 × 10⁸','m/s','exact'],
+ ['Universal','Planck constant','h','6.62607015 × 10⁻³⁴','J·s','exact'],
+ ['Universal','Reduced Planck constant','ħ','1.054571817 × 10⁻³⁴','J·s',''],
+ ['Universal','Gravitational constant','G','6.67430 × 10⁻¹¹','N·m²/kg²',''],
+ ['Universal','Vacuum permittivity','ε₀','8.8541878128 × 10⁻¹²','F/m',''],
+ ['Universal','Vacuum permeability','μ₀','1.25663706212 × 10⁻⁶','N/A²','≈ 4π × 10⁻⁷'],
+ ['Universal','Coulomb constant','k','8.9875517923 × 10⁹','N·m²/C²','1/(4πε₀)'],
+ ['Electromagnetic','Elementary charge','e','1.602176634 × 10⁻¹⁹','C','exact'],
+ ['Electromagnetic','Faraday constant','F','96 485.33212','C/mol',''],
+ ['Electromagnetic','Electron volt','eV','1.602176634 × 10⁻¹⁹','J','exact'],
+ ['Atomic','Electron mass','mₑ','9.1093837015 × 10⁻³¹','kg',''],
+ ['Atomic','Proton mass','mₚ','1.67262192369 × 10⁻²⁷','kg',''],
+ ['Atomic','Neutron mass','mₙ','1.67492749804 × 10⁻²⁷','kg',''],
+ ['Atomic','Atomic mass unit','u','1.66053906660 × 10⁻²⁷','kg',''],
+ ['Atomic','Bohr radius','a₀','5.29177210903 × 10⁻¹¹','m',''],
+ ['Atomic','Rydberg constant','R∞','1.0973731568160 × 10⁷','1/m',''],
+ ['Atomic','Fine-structure constant','α','7.2973525693 × 10⁻³','','≈ 1/137.036'],
+ ['Chemistry','Avogadro constant','Nₐ','6.02214076 × 10²³','1/mol','exact'],
+ ['Chemistry','Boltzmann constant','k_B','1.380649 × 10⁻²³','J/K','exact'],
+ ['Chemistry','Gas constant','R','8.314462618','J/(mol·K)','= 0.082057 L·atm/(mol·K)'],
+ ['Chemistry','Molar volume of ideal gas (STP)','Vₘ','22.413969','L/mol','0 °C, 1 atm'],
+ ['Chemistry','Molar volume (SATP)','Vₘ','24.789','L/mol','25 °C, 1 bar'],
+ ['Chemistry','Standard atmosphere','atm','101 325','Pa','exact'],
+ ['Chemistry','Absolute zero','0 K','−273.15','°C','exact'],
+ ['Chemistry','Water ion product (25 °C)','K_w','1.0 × 10⁻¹⁴','',''],
+ ['Chemistry','Specific heat of water','c','4.18','J/(g·K)','≈ 4184 J/(kg·K)'],
+ ['Thermal','Stefan–Boltzmann constant','σ','5.670374419 × 10⁻⁸','W/(m²·K⁴)',''],
+ ['Thermal','Wien displacement constant','b','2.897771955 × 10⁻³','m·K',''],
+ ['Earth & space','Standard gravity','g','9.80665','m/s²','exact'],
+ ['Earth & space','Earth mass','M⊕','5.972 × 10²⁴','kg',''],
+ ['Earth & space','Earth radius (mean)','R⊕','6.371 × 10⁶','m',''],
+ ['Earth & space','Sun mass','M☉','1.989 × 10³⁰','kg',''],
+ ['Earth & space','Astronomical unit','AU','1.495978707 × 10¹¹','m','exact'],
+ ['Earth & space','Light-year','ly','9.4607 × 10¹⁵','m',''],
+ ['Earth & space','Parsec','pc','3.0857 × 10¹⁶','m',''],
+ ['Earth & space','Speed of sound in air (20 °C)','v','343','m/s',''],
+ ['Maths','Pi','π','3.14159265358979','',''],
+ ['Maths','Euler\'s number','e','2.71828182845905','',''],
+ ['Maths','Golden ratio','φ','1.61803398874989','','(1 + √5)/2'],
+ ['Maths','Square root of 2','√2','1.41421356237310','',''],
+ ['Maths','Natural log of 2','ln 2','0.69314718055995','',''],
+ ['Maths','Euler–Mascheroni constant','γ','0.57721566490153','',''],
+];
+let custom = db.get('custom', []);
+let cat = 'All';
+const all = () => BUILT.map(([c, n, s, v, u, note]) => ({ c, n, s, v, u, note }))
+  .concat(custom.map((x, k) => ({ c: x.c || 'Mine', n: x.n, s: x.s || '', v: x.v, u: x.u || '', note: '', k })));
+const line = x => `${x.s ? x.s + ' = ' : ''}${x.v}${x.u ? ' ' + x.u : ''}`;
+// "2.99792458 × 10⁸" -> "2.99792458e8", so it pastes into calculators.
+const SUP = { '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-' };
+const plain = v => v.replace(/\s*×\s*10([⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+)/, (_, e) => 'e' + [...e].map(c => SUP[c]).join('')).replace(/−/g, '-').replace(/\s/g, '');
+async function copy(t) {
+  try { await navigator.clipboard.writeText(t); toast('Copied'); }
+  catch { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); toast('Copied'); }
+}
+
+function render() {
+  const f = $('find').value.toLowerCase(), list = all();
+  const cats = ['All', ...new Set(list.map(x => x.c))];
+  $('chips').innerHTML = cats.map(c => `<button class="${c === cat ? '' : 'ghost'} fit" data-c="${esc(c)}" style="padding:6px 12px;font-size:14px">${esc(c)}</button>`).join('');
+  $('chips').querySelectorAll('button').forEach(b => b.onclick = () => { cat = b.dataset.c; render(); });
+  const shown = list.filter(x => (cat === 'All' || x.c === cat) && [x.n, x.s, x.u, x.c, x.note].join(' ').toLowerCase().includes(f));
+  $('list').innerHTML = shown.map((x, i) => `<div class="card"><div class="muted">${esc(x.c)} · ${esc(x.n)}</div>
+    <div style="font-size:19px;margin:4px 0">${esc(line(x))}</div>
+    ${x.note ? `<div class="muted">${esc(x.note)}</div>` : ''}
+    <div class="row"><button class="ghost" data-w="${i}">Write on page</button><button class="ghost" data-y="${i}">Copy value</button>${x.k !== undefined ? `<button class="ghost fit" data-d="${x.k}">Delete</button>` : ''}</div></div>`).join('') || '<p class="muted">No constants match.</p>';
+  $('list').querySelectorAll('[data-w]').forEach(b => b.onclick = () => { const x = shown[+b.dataset.w]; insert(`${x.n}: ${line(x)}`); });
+  $('list').querySelectorAll('[data-y]').forEach(b => b.onclick = () => copy(plain(shown[+b.dataset.y].v)));
+  $('list').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { custom.splice(+b.dataset.d, 1); db.set('custom', custom); render(); });
+}
+$('find').oninput = render;
+$('add').onclick = () => {
+  const n = $('cn').value.trim(), v = $('cv').value.trim();
+  if (!n || !v) return toast('Name and value are needed');
+  custom.push({ n, s: $('cs').value.trim(), v, u: $('cu').value.trim(), c: $('cc').value.trim() }); db.set('custom', custom);
+  ['cn','cs','cv','cu','cc'].forEach(i => $(i).value = ''); render(); toast('Saved');
+};
+render();
+
+})();
+</script>
+</body>
+</html>

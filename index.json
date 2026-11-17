@@ -2,6 +2,28 @@
   "format": 1,
   "tools": [
     {
+      "id": "constants",
+      "name": "Constants",
+      "description": "Physical, chemical, maths and astronomy constants with units. Search, copy, add your own and write any of them onto the page.",
+      "icon": "science",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/constants",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 10418,
+          "sha256": "76a4cf29e53aa972b31f5f870818b7803b5c8721f7b5da8e409223f64b656b3e"
+        },
+        {
+          "path": "manifest.json",
+          "size": 309,
+          "sha256": "7658f57e24a1a2e191f7ffd4a6692a196a96a61637f740069c4b66a7eb5e390d"
+        }
+      ]
+    },
+    {
       "id": "epubreader",
       "name": "EPUB reader",
       "description": "Read EPUB books next to your notes: contents, bookmarks, search, text size and themes, quote a passage, ask AI about a section",
