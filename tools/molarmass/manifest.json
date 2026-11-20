@@ -1,0 +1,10 @@
+{
+  "id": "molarmass",
+  "name": "Molar mass",
+  "description": "Molar mass and composition of any formula, with gram / mole / particle / gas-volume conversions.",
+  "entry": "index.html",
+  "icon": "calculate",
+  "version": "1.0.0",
+  "author": "Adv Notes",
+  "category": "Study"
+}

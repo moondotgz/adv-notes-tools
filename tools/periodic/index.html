@@ -1,0 +1,260 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Periodic table</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+  .ptable { display:grid; grid-template-columns:repeat(18, minmax(0, 1fr)); gap:2px; margin:10px 0; }
+  .ptable .el { border:0; padding:3px 0 2px; border-radius:5px; font-size:clamp(7px, 2.2vw, 11px); line-height:1.1; text-align:center; color:#1a1a1a; min-width:0; overflow:hidden; }
+  .ptable .el b { display:block; font-size:clamp(9px, 3vw, 14px); }
+  .ptable .el.dim { opacity:.18; }
+  .ptable .el.on { outline:2px solid var(--fg); }
+  .ptable .gap { grid-column: 1 / -1; height:6px; }
+  .s { background:#ffb3b3; } .p { background:#ffe08a; } .d { background:#9fd3ff; } .f { background:#b9f0b0; }
+  .big { font-size:30px; font-weight:700; } .kv { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; margin:8px 0; font-size:15px; }
+  .boxes { font-size:18px; letter-spacing:1px; }
+  table.q { border-collapse:collapse; margin:6px 0; font-size:15px; } table.q td { border:1px solid var(--muted); padding:3px 8px; text-align:center; }
+</style>
+</head>
+<body>
+
+<input id="find" placeholder="Search element (name, symbol or number)">
+<div id="grid" class="ptable"></div>
+<div id="info" class="card hide"></div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const a = t.search(/[\[{]/); if (a < 0) throw bad();
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw bad(); }
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+// Places a canvas on the page as a picture (app 1.5.0+).
+function placeImage(cv) {
+  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast('Placed on your page — move or resize it with the lasso') : toast('Could not place the picture'); }
+  else toast('Update Adv Notes to 1.5.0 or newer to place pictures on the page');
+}
+// ---- shared chemistry data: [symbol, name, atomic mass, Pauling electronegativity or 0] by Z-1 ----
+const EL = `H Hydrogen 1.008 2.20|He Helium 4.0026 0|Li Lithium 6.94 0.98|Be Beryllium 9.0122 1.57|B Boron 10.81 2.04|C Carbon 12.011 2.55|N Nitrogen 14.007 3.04|O Oxygen 15.999 3.44|F Fluorine 18.998 3.98|Ne Neon 20.180 0|Na Sodium 22.990 0.93|Mg Magnesium 24.305 1.31|Al Aluminium 26.982 1.61|Si Silicon 28.085 1.90|P Phosphorus 30.974 2.19|S Sulfur 32.06 2.58|Cl Chlorine 35.45 3.16|Ar Argon 39.95 0|K Potassium 39.098 0.82|Ca Calcium 40.078 1.00|Sc Scandium 44.956 1.36|Ti Titanium 47.867 1.54|V Vanadium 50.942 1.63|Cr Chromium 51.996 1.66|Mn Manganese 54.938 1.55|Fe Iron 55.845 1.83|Co Cobalt 58.933 1.88|Ni Nickel 58.693 1.91|Cu Copper 63.546 1.90|Zn Zinc 65.38 1.65|Ga Gallium 69.723 1.81|Ge Germanium 72.630 2.01|As Arsenic 74.922 2.18|Se Selenium 78.971 2.55|Br Bromine 79.904 2.96|Kr Krypton 83.798 3.00|Rb Rubidium 85.468 0.82|Sr Strontium 87.62 0.95|Y Yttrium 88.906 1.22|Zr Zirconium 91.224 1.33|Nb Niobium 92.906 1.6|Mo Molybdenum 95.95 2.16|Tc Technetium 98 1.9|Ru Ruthenium 101.07 2.2|Rh Rhodium 102.91 2.28|Pd Palladium 106.42 2.20|Ag Silver 107.87 1.93|Cd Cadmium 112.41 1.69|In Indium 114.82 1.78|Sn Tin 118.71 1.96|Sb Antimony 121.76 2.05|Te Tellurium 127.60 2.1|I Iodine 126.90 2.66|Xe Xenon 131.29 2.60|Cs Caesium 132.91 0.79|Ba Barium 137.33 0.89|La Lanthanum 138.91 1.10|Ce Cerium 140.12 1.12|Pr Praseodymium 140.91 1.13|Nd Neodymium 144.24 1.14|Pm Promethium 145 0|Sm Samarium 150.36 1.17|Eu Europium 151.96 0|Gd Gadolinium 157.25 1.20|Tb Terbium 158.93 0|Dy Dysprosium 162.50 1.22|Ho Holmium 164.93 1.23|Er Erbium 167.26 1.24|Tm Thulium 168.93 1.25|Yb Ytterbium 173.05 0|Lu Lutetium 174.97 1.27|Hf Hafnium 178.49 1.3|Ta Tantalum 180.95 1.5|W Tungsten 183.84 2.36|Re Rhenium 186.21 1.9|Os Osmium 190.23 2.2|Ir Iridium 192.22 2.20|Pt Platinum 195.08 2.28|Au Gold 196.97 2.54|Hg Mercury 200.59 2.00|Tl Thallium 204.38 1.62|Pb Lead 207.2 2.33|Bi Bismuth 208.98 2.02|Po Polonium 209 2.0|At Astatine 210 2.2|Rn Radon 222 0|Fr Francium 223 0.7|Ra Radium 226 0.9|Ac Actinium 227 1.1|Th Thorium 232.04 1.3|Pa Protactinium 231.04 1.5|U Uranium 238.03 1.38|Np Neptunium 237 1.36|Pu Plutonium 244 1.28|Am Americium 243 1.3|Cm Curium 247 1.3|Bk Berkelium 247 1.3|Cf Californium 251 1.3|Es Einsteinium 252 1.3|Fm Fermium 257 1.3|Md Mendelevium 258 1.3|No Nobelium 259 1.3|Lr Lawrencium 266 0|Rf Rutherfordium 267 0|Db Dubnium 268 0|Sg Seaborgium 269 0|Bh Bohrium 270 0|Hs Hassium 277 0|Mt Meitnerium 278 0|Ds Darmstadtium 281 0|Rg Roentgenium 282 0|Cn Copernicium 285 0|Nh Nihonium 286 0|Fl Flerovium 289 0|Mc Moscovium 290 0|Lv Livermorium 293 0|Ts Tennessine 294 0|Og Oganesson 294 0`
+  .split('|').map((r, i) => { const [s, n, m, en] = r.split(' '); return { z: i + 1, s, n, m: +m, en: +en || null }; });
+const BY = Object.fromEntries(EL.map(e => [e.s, e]));
+
+// Parses a formula like Ca(OH)2, CuSO4·5H2O, [Fe(CN)6]3-  -> { element: count }
+function parseFormula(f) {
+  f = String(f).replace(/\s+/g, '').replace(/\^?\d*[+-]$/, '');
+  const parts = f.split(/[·•*.]/).filter(Boolean);
+  const total = {};
+  for (let part of parts) {
+    let mult = 1; const lead = part.match(/^(\d+)(.*)$/);
+    if (lead && /[A-Z(\[]/.test(lead[2][0] || '')) { mult = +lead[1]; part = lead[2]; }
+    let i = 0;
+    function group() {
+      const out = {};
+      while (i < part.length) {
+        const c = part[i];
+        if (c === '(' || c === '[') { i++; const g = group(); if (part[i] !== ')' && part[i] !== ']') throw new Error('Missing closing bracket'); i++; const k = num(); for (const e in g) out[e] = (out[e] || 0) + g[e] * k; }
+        else if (c === ')' || c === ']') return out;
+        else if (/[A-Z]/.test(c)) { let s = c; i++; while (i < part.length && /[a-z]/.test(part[i])) s += part[i++]; if (!BY[s]) throw new Error('Unknown element "' + s + '"'); const k = num(); out[s] = (out[s] || 0) + k; }
+        else throw new Error('Unexpected "' + c + '"');
+      }
+      return out;
+    }
+    function num() { let d = ''; while (i < part.length && /\d/.test(part[i])) d += part[i++]; return d ? +d : 1; }
+    const g = group();
+    if (i < part.length) throw new Error('Unexpected "' + part[i] + '"');
+    for (const e in g) total[e] = (total[e] || 0) + g[e] * mult;
+  }
+  if (!Object.keys(total).length) throw new Error('Enter a formula');
+  return total;
+}
+const molarMass = comp => Object.entries(comp).reduce((a, [e, n]) => a + BY[e].m * n, 0);
+const SUB = s => String(s).replace(/\d/g, d => '₀₁₂₃₄₅₆₇₈₉'[d]);
+const prettyFormula = f => String(f).replace(/([A-Za-z)\]])(\d+)/g, (_, a, d) => a + SUB(d)).replace(/\*/g, '·');
+const fmt = (x, d = 4) => !isFinite(x) ? '—' : Math.abs(x) >= 1e5 || (x !== 0 && Math.abs(x) < 1e-3) ? x.toExponential(d - 1).replace(/e\+?(-?)(\d+)/, (_, s, e) => ' × 10' + (s ? '⁻' : '') + [...e].map(c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c]).join('')) : String(+x.toPrecision(d + 1));
+
+// Filling (Aufbau / Madelung) order and the well-known exceptions.
+const ORDER = ['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p','6s','4f','5d','6p','7s','5f','6d','7p'];
+const CAP = { s: 2, p: 6, d: 10, f: 14 };
+const EXC = { 24:{'4s':-1,'3d':1}, 29:{'4s':-1,'3d':1}, 41:{'5s':-1,'4d':1}, 42:{'5s':-1,'4d':1}, 44:{'5s':-1,'4d':1}, 45:{'5s':-1,'4d':1},
+  46:{'5s':-2,'4d':2}, 47:{'5s':-1,'4d':1}, 78:{'6s':-1,'5d':1}, 79:{'6s':-1,'5d':1}, 57:{'4f':-1,'5d':1}, 58:{'4f':-1,'5d':1},
+  64:{'4f':-1,'5d':1}, 89:{'5f':-1,'6d':1}, 90:{'5f':-2,'6d':2}, 91:{'5f':-1,'6d':1}, 92:{'5f':-1,'6d':1}, 93:{'5f':-1,'6d':1},
+  96:{'5f':-1,'6d':1}, 103:{'6d':-1,'7p':1} };
+const NOBLE = [2, 10, 18, 36, 54, 86];
+const L = { s: 0, p: 1, d: 2, f: 3 };
+function config(z) {
+  let left = z; const out = [];
+  for (const o of ORDER) { if (left <= 0) break; const k = Math.min(CAP[o[1]], left); out.push([o, k]); left -= k; }
+  const ex = EXC[z];
+  if (ex) for (const o in ex) { const r = out.find(x => x[0] === o); if (r) r[1] += ex[o]; else out.push([o, ex[o]]); }
+  return out.filter(x => x[1] > 0);
+}
+const cfgText = c => c.map(([o, k]) => o + SUP(k)).join(' ');
+const SUP = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
+function shortConfig(z) {
+  const core = [...NOBLE].reverse().find(n => n < z);
+  if (!core) return cfgText(config(z));
+  const full = config(z), coreCfg = config(core);
+  const rest = full.map(([o, k]) => { const c = coreCfg.find(x => x[0] === o); return [o, k - (c ? c[1] : 0)]; }).filter(x => x[1] > 0);
+  return '[' + EL[core - 1].s + '] ' + cfgText(rest);
+}
+// Valence subshells: those beyond the noble-gas core.
+function valence(z) {
+  const core = [...NOBLE].reverse().find(n => n < z) || 0;
+  const coreCfg = config(core);
+  return config(z).map(([o, k]) => { const c = coreCfg.find(x => x[0] === o); return [o, k - (c ? c[1] : 0)]; }).filter(x => x[1] > 0);
+}
+// Hund's rule: one up-arrow in each box first, then pair up.  Returns per box: 0, 1 (↑) or 2 (↑↓)
+function fill(o, k) { const n = 2 * L[o[1]] + 1; const b = Array(n).fill(0); for (let i = 0; i < k; i++) b[i % n]++; return b; }
+// Quantum numbers of the last electron added.
+function lastElectron(z) {
+  const c = valence(z); const [o, k] = c[c.length - 1];
+  const n = +o[0], l = L[o[1]], boxes = 2 * l + 1;
+  const idx = (k - 1) % boxes, ms = k > boxes ? -0.5 : 0.5;
+  return { n, l, m: idx - l, ms };
+}
+function pos(z) {
+  if (z >= 57 && z <= 71) return [9, z - 57 + 3]; if (z >= 89 && z <= 103) return [10, z - 89 + 3];
+  const ENDS = [2, 10, 18, 36, 54, 86, 118];
+  const pi = ENDS.findIndex(e => z <= e), period = pi + 1, start = pi ? ENDS[pi - 1] + 1 : 1;
+  const k = z - start;
+  if (period === 1) return [1, z === 1 ? 1 : 18];
+  if (period <= 3) return [period, k < 2 ? k + 1 : k + 11];
+  if (period <= 5) return [period, k + 1];
+  // periods 6 and 7: f-block lives in the separate rows
+  return [period, k < 2 ? k + 1 : k - 13];
+}
+function block(z) { const c = valence(z); const last = c[c.length - 1][0][1]; return (z >= 57 && z <= 71) || (z >= 89 && z <= 103) ? 'f' : (z === 2 ? 's' : last); }
+
+let sel = null;
+function renderGrid() {
+  const f = $('find').value.trim().toLowerCase();
+  let h = '';
+  const cells = [];
+  for (const e of EL) { const [r, c] = pos(e.z); cells.push([r, c, e]); }
+  for (const [r, c, e] of cells) {
+    const hit = !f || e.s.toLowerCase() === f || e.n.toLowerCase().includes(f) || String(e.z) === f;
+    const row = r >= 9 ? r + 1 : r;
+    h += `<button class="el ${block(e.z)}${hit ? '' : ' dim'}${sel === e.z ? ' on' : ''}" style="grid-row:${row};grid-column:${c}" data-z="${e.z}">${e.z}<b>${e.s}</b></button>`;
+  }
+  h += '<div class="gap" style="grid-row:9"></div>';
+  $('grid').innerHTML = h;
+  $('grid').querySelectorAll('.el').forEach(b => b.onclick = () => show(+b.dataset.z));
+}
+function show(z) {
+  sel = z; renderGrid();
+  const e = EL[z - 1], q = lastElectron(z), v = valence(z);
+  const boxes = v.map(([o, k]) => o + ' ' + fill(o, k).map(n => '[' + (n === 2 ? '↑↓' : n === 1 ? '↑ ' : '  ') + ']').join('')).join('   ');
+  $('info').classList.remove('hide');
+  $('info').innerHTML = `<div class="big">${e.s} <span style="font-size:18px;font-weight:400">${esc(e.n)}</span></div>
+  <div class="kv"><span class="muted">Atomic number</span><span>${e.z}</span>
+  <span class="muted">Atomic mass</span><span>${e.m} u</span>
+  <span class="muted">Electronegativity</span><span>${e.en ?? '—'}</span>
+  <span class="muted">Configuration</span><span>${cfgText(config(z))}</span>
+  <span class="muted">Short</span><span>${shortConfig(z)}</span>
+  <span class="muted">Block</span><span>${block(z)}</span></div>
+  <div class="muted">Valence orbitals (Hund's rule)</div><div class="boxes">${esc(boxes)}</div>
+  <div class="muted" style="margin-top:8px">Last electron</div>
+  <table class="q"><tr><td>n</td><td>l</td><td>m</td><td>mₛ</td></tr><tr><td>${q.n}</td><td>${q.l}</td><td>${q.m}</td><td>${q.ms > 0 ? '+½' : '−½'}</td></tr></table>
+  <div class="row"><button id="wtxt">Write on page</button><button class="ghost" id="wimg">Place orbital diagram</button></div>`;
+  $('wtxt').onclick = () => insert(`${e.s} (${e.n}, Z = ${e.z}, M = ${e.m} g/mol): ${cfgText(config(z))} = ${shortConfig(z)}; last e⁻: n=${q.n}, l=${q.l}, m=${q.m}, mₛ=${q.ms > 0 ? '+½' : '−½'}`);
+  $('wimg').onclick = () => placeImage(diagram(z));
+}
+// Draws boxes with arrows and n / l / m rows under each box, like a hand-drawn diagram.
+function diagram(z) {
+  const v = valence(z), B = 56, gap = 26, pad = 20, rowH = 40;
+  const total = v.reduce((a, [o]) => a + (2 * L[o[1]] + 1) * B + gap, -gap);
+  const cv = document.createElement('canvas'); cv.width = total + pad * 2 + 70; cv.height = pad * 2 + 40 + B + rowH * 3;
+  const c = cv.getContext('2d'); c.strokeStyle = c.fillStyle = '#111'; c.lineWidth = 3; c.lineCap = 'round';
+  c.font = '28px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  const top = pad + 40; let x = pad + 70;
+  c.textAlign = 'left'; c.fillText(EL[z - 1].s + ': ' + shortConfig(z), pad, pad + 14); c.textAlign = 'center';
+  ['n', 'l', 'm'].forEach((t, i) => c.fillText(t, pad + 20, top + B + rowH * (i + 0.7)));
+  for (const [o, k] of v) {
+    const b = fill(o, k), l = L[o[1]];
+    b.forEach((cnt, i) => {
+      const bx = x + i * B; c.strokeRect(bx, top, B, B);
+      const arrow = (ax, up) => { const y0 = up ? top + B - 10 : top + 10, y1 = up ? top + 10 : top + B - 10, d = up ? 8 : -8;
+        c.beginPath(); c.moveTo(ax, y0); c.lineTo(ax, y1); c.moveTo(ax - 7, y1 + d); c.lineTo(ax, y1); c.lineTo(ax + 7, y1 + d); c.stroke(); };
+      if (cnt >= 1) arrow(bx + (cnt === 2 ? B * 0.33 : B / 2), true);
+      if (cnt === 2) arrow(bx + B * 0.67, false);
+      [o[0], l, i - l].forEach((t, r) => c.fillText(String(t).replace('-', '−'), bx + B / 2, top + B + rowH * (r + 0.7)));
+    });
+    x += b.length * B + gap;
+  }
+  return cv;
+}
+$('find').oninput = () => { renderGrid(); const f = $('find').value.trim().toLowerCase(); const hit = EL.find(e => e.s.toLowerCase() === f || String(e.z) === f) || EL.filter(e => e.n.toLowerCase().startsWith(f))[0]; if (f && hit) show(hit.z); };
+renderGrid();
+
+})();
+</script>
+</body>
+</html>

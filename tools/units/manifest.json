@@ -1,0 +1,10 @@
+{
+  "id": "units",
+  "name": "Unit converter",
+  "description": "Converts length, mass, volume, pressure, energy, temperature, amount, concentration and more.",
+  "entry": "index.html",
+  "icon": "calculate",
+  "version": "1.0.0",
+  "author": "Adv Notes",
+  "category": "Study"
+}

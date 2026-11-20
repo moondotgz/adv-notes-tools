@@ -1,0 +1,222 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graph plotter</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+  #cv { width:100%; background:#fff; border-radius:10px; margin:8px 0; }
+  .fnrow { display:flex; gap:6px; align-items:center; margin:6px 0; } .fnrow .sw { width:14px; height:14px; border-radius:7px; flex:0 0 auto; }
+  .fnrow input { flex:1; } label { font-size:14px; display:flex; gap:6px; align-items:center; }
+</style>
+</head>
+<body>
+
+<div class="tabs"><button data-t="fn">Functions</button><button data-t="data">Data points</button></div>
+<div id="fn">
+  <div id="fns"></div>
+  <div class="muted">Use x, + − * / ^, sin cos tan sqrt abs ln log exp, pi, e. Example: 2x^2 − 3x + 1</div>
+</div>
+<div id="data">
+  <textarea id="pts" placeholder="One point per line: x, y&#10;0, 1.2&#10;1, 2.9&#10;2, 5.1"></textarea>
+  <div class="row"><label class="fit"><input type="checkbox" id="join" checked style="width:auto"> Join points</label><label class="fit"><input type="checkbox" id="fit" style="width:auto"> Best-fit line</label></div>
+  <div id="fitout" class="muted"></div>
+</div>
+<div class="card">
+  <div class="row"><input id="xmin" placeholder="x min"><input id="xmax" placeholder="x max"><input id="ymin" placeholder="y min (auto)"><input id="ymax" placeholder="y max (auto)"></div>
+  <div class="row"><input id="xl" placeholder="x label"><input id="yl" placeholder="y label"></div>
+  <div class="row"><label class="fit"><input type="checkbox" id="grid" checked style="width:auto"> Grid</label><label class="fit"><input type="checkbox" id="nums" checked style="width:auto"> Numbers</label></div>
+</div>
+<canvas id="cv" width="900" height="640"></canvas>
+<div id="err" class="err"></div>
+<div class="row"><button id="place">Place on page</button></div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const a = t.search(/[\[{]/); if (a < 0) throw bad();
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw bad(); }
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+// Places a canvas on the page as a picture (app 1.5.0+).
+function placeImage(cv) {
+  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast('Placed on your page — move or resize it with the lasso') : toast('Could not place the picture'); }
+  else toast('Update Adv Notes to 1.5.0 or newer to place pictures on the page');
+}
+const COLORS = ['#1a1a1a', '#2d4bd8', '#d64545', '#2e9e5b'];
+// ---- small, safe expression compiler (no eval) ----
+function compile(src) {
+  const s = src.replace(/^\s*y\s*=/, '').replace(/[−–]/g, '-').replace(/·|×/g, '*').replace(/÷/g, '/').replace(/π/g, 'pi').replace(/√/g, 'sqrt').replace(/,/g, '.');
+  const toks = []; const re = /\s*(\d+\.?\d*(?:e[+-]?\d+)?|\.\d+|[a-z]+|[-+*/^()])/giy; let m, at = 0;
+  while (at < s.length) { re.lastIndex = at; m = re.exec(s); if (!m) { if (/\s/.test(s.slice(at))) break; throw new Error('Unexpected "' + s[at] + '"'); } toks.push(m[1]); at = re.lastIndex; }
+  // implicit multiplication: 2x, 2(x+1), (x)(x), x sin x
+  const T = []; const isVal = t => /^[\d.]/.test(t) || /^[a-z]+$/i.test(t) && !FN[t.toLowerCase()] || t === ')';
+  const startsVal = t => /^[\d.]/.test(t) || /^[a-z]+$/i.test(t) || t === '(';
+  toks.forEach((t, i) => { if (i && isVal(toks[i - 1]) && startsVal(t)) T.push('*'); T.push(t); });
+  let i = 0;
+  const peek = () => T[i], eat = t => { if (T[i] !== t) throw new Error('Expected ' + t); i++; };
+  function expr() { let a = term(); while (peek() === '+' || peek() === '-') { const op = T[i++], b = term(), l = a; a = op === '+' ? x => l(x) + b(x) : x => l(x) - b(x); } return a; }
+  function term() { let a = unary(); while (peek() === '*' || peek() === '/') { const op = T[i++], b = unary(), l = a; a = op === '*' ? x => l(x) * b(x) : x => l(x) / b(x); } return a; }
+  function unary() { if (peek() === '-') { i++; const a = unary(); return x => -a(x); } if (peek() === '+') { i++; return unary(); } return power(); }
+  function power() { const a = atom(); if (peek() === '^') { i++; const b = unary(); return x => Math.pow(a(x), b(x)); } return a; }
+  function atom() {
+    const t = T[i++]; if (t === undefined) throw new Error('Incomplete expression');
+    if (t === '(') { const a = expr(); eat(')'); return a; }
+    if (/^[\d.]/.test(t)) { const v = parseFloat(t); return () => v; }
+    const k = t.toLowerCase();
+    if (k === 'x') return x => x; if (k === 'pi') return () => Math.PI; if (k === 'e') return () => Math.E;
+    if (FN[k]) { const a = peek() === '(' ? (i++, (() => { const r = expr(); eat(')'); return r; })()) : power(); return x => FN[k](a(x)); }
+    throw new Error('Unknown name "' + t + '"');
+  }
+  const f = expr(); if (i < T.length) throw new Error('Unexpected "' + T[i] + '"'); return f;
+}
+const FN = { sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin, acos: Math.acos, atan: Math.atan, sqrt: Math.sqrt, abs: Math.abs, ln: Math.log, log: Math.log10, exp: Math.exp, floor: Math.floor, ceil: Math.ceil };
+
+let mode = 'fn'; let fns = db.get('fns', ['x^2 - 2', '', '', '']);
+$('fns').innerHTML = COLORS.map((c, k) => `<div class="fnrow"><span class="sw" style="background:${c}"></span><span>y =</span><input id="f${k}" value="${esc(fns[k] || '')}" placeholder="${k ? '(optional)' : 'x^2 - 2'}" autocapitalize="off" spellcheck="false"></div>`).join('');
+const opts = db.get('opts', { xmin: '-5', xmax: '5', ymin: '', ymax: '', xl: 'x', yl: 'y', grid: true, nums: true, pts: '', join: true, fit: false });
+['xmin','xmax','ymin','ymax','xl','yl','pts'].forEach(k => $(k).value = opts[k] ?? '');
+['grid','nums','join','fit'].forEach(k => $(k).checked = !!opts[k]);
+const nice = span => { const r = span / 8, p = Math.pow(10, Math.floor(Math.log10(r))), m = r / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+const lbl = v => String(+v.toPrecision(6)).replace('-', '−');
+
+function draw(forPage) {
+  const cv = $('cv'), c = cv.getContext('2d'), W = cv.width, H = cv.height;
+  c.clearRect(0, 0, W, H);
+  $('err').textContent = '';
+  ['xmin','xmax','ymin','ymax','xl','yl','pts'].forEach(k => opts[k] = $(k).value); ['grid','nums','join','fit'].forEach(k => opts[k] = $(k).checked);
+  db.set('opts', opts); fns = COLORS.map((_, k) => $('f' + k).value); db.set('fns', fns);
+  // what to plot
+  const curves = []; let points = [];
+  if (mode === 'fn') fns.forEach((s, k) => { if (s.trim()) try { curves.push([compile(s), COLORS[k]]); } catch (e) { $('err').textContent = `y${k + 1}: ${e.message}`; } });
+  else points = opts.pts.split('\n').map(l => l.trim().split(/[\s,;\t]+/).map(v => parseFloat(v.replace(',', '.')))).filter(p => p.length >= 2 && isFinite(p[0]) && isFinite(p[1])).sort((a, b) => a[0] - b[0]);
+  let x0 = parseFloat(opts.xmin), x1 = parseFloat(opts.xmax);
+  if (mode === 'data' && points.length) { const xs = points.map(p => p[0]); const pad = (Math.max(...xs) - Math.min(...xs)) * 0.08 || 1; if (!isFinite(x0)) x0 = Math.min(...xs) - pad; if (!isFinite(x1)) x1 = Math.max(...xs) + pad; }
+  if (!isFinite(x0)) x0 = -5; if (!isFinite(x1)) x1 = 5; if (x1 <= x0) { $('err').textContent = 'x max must be bigger than x min'; return; }
+  let y0 = parseFloat(opts.ymin), y1 = parseFloat(opts.ymax);
+  if (!isFinite(y0) || !isFinite(y1)) {
+    const ys = []; curves.forEach(([f]) => { for (let k = 0; k <= 200; k++) { const v = f(x0 + (x1 - x0) * k / 200); if (isFinite(v)) ys.push(v); } }); points.forEach(p => ys.push(p[1]));
+    ys.sort((a, b) => a - b); const lo = ys.length ? ys[Math.floor(ys.length * 0.02)] : -5, hi = ys.length ? ys[Math.ceil(ys.length * 0.98) - 1] : 5;
+    const pad = (hi - lo) * 0.1 || 1; if (!isFinite(y0)) y0 = Math.min(lo - pad, mode === 'data' ? lo - pad : lo - pad); if (!isFinite(y1)) y1 = hi + pad;
+  }
+  if (y1 <= y0) y1 = y0 + 1;
+  const L = 70, R = 30, T = 30, B = 60, PW = W - L - R, PH = H - T - B;
+  const X = x => L + (x - x0) / (x1 - x0) * PW, Y = y => T + (y1 - y) / (y1 - y0) * PH;
+  const ink = '#1a1a1a';
+  c.lineCap = c.lineJoin = 'round'; c.font = '22px sans-serif'; c.fillStyle = ink;
+  const sx = nice(x1 - x0), sy = nice(y1 - y0);
+  // grid
+  if (opts.grid) { c.strokeStyle = 'rgba(0,0,0,.15)'; c.lineWidth = 1.5; c.beginPath();
+    for (let v = Math.ceil(x0 / sx) * sx; v <= x1 + 1e-9; v += sx) { c.moveTo(X(v), T); c.lineTo(X(v), T + PH); }
+    for (let v = Math.ceil(y0 / sy) * sy; v <= y1 + 1e-9; v += sy) { c.moveTo(L, Y(v)); c.lineTo(L + PW, Y(v)); } c.stroke(); }
+  // axes: through 0 when visible, else along the edge
+  const ax = y0 <= 0 && y1 >= 0 ? Y(0) : T + PH, ay = x0 <= 0 && x1 >= 0 ? X(0) : L;
+  c.strokeStyle = ink; c.lineWidth = 3; c.beginPath(); c.moveTo(L, ax); c.lineTo(L + PW + 14, ax); c.moveTo(ay, T + PH); c.lineTo(ay, T - 14); c.stroke();
+  c.beginPath(); c.moveTo(L + PW + 14, ax); c.lineTo(L + PW, ax - 7); c.lineTo(L + PW, ax + 7); c.closePath(); c.moveTo(ay, T - 14); c.lineTo(ay - 7, T); c.lineTo(ay + 7, T); c.closePath(); c.fill();
+  if (opts.nums) {
+    c.textAlign = 'center'; c.textBaseline = 'top';
+    for (let v = Math.ceil(x0 / sx) * sx; v <= x1 + 1e-9; v += sx) { if (Math.abs(v) < sx / 1e6 && ay !== L) continue; c.fillRect(X(v) - 1, ax - 6, 2, 12); c.fillText(lbl(v), X(v), ax + 10); }
+    c.textAlign = 'right'; c.textBaseline = 'middle';
+    for (let v = Math.ceil(y0 / sy) * sy; v <= y1 + 1e-9; v += sy) { if (Math.abs(v) < sy / 1e6 && ax !== T + PH) continue; c.fillRect(ay - 6, Y(v) - 1, 12, 2); c.fillText(lbl(v), ay - 10, Y(v)); }
+  }
+  c.font = 'italic 24px sans-serif'; c.textAlign = 'right'; c.textBaseline = 'bottom'; c.fillText(opts.xl || '', L + PW + 10, ax - 10);
+  c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText(opts.yl || '', ay + 12, T - 16);
+  // curves
+  c.save(); c.beginPath(); c.rect(L, T, PW, PH); c.clip();
+  curves.forEach(([f, col]) => { c.strokeStyle = col; c.lineWidth = 3.5; c.beginPath(); let pen = false, prev = null;
+    for (let k = 0; k <= 1200; k++) { const x = x0 + (x1 - x0) * k / 1200, y = f(x);
+      if (!isFinite(y) || (prev !== null && Math.abs(Y(y) - Y(prev)) > PH * 1.5)) { pen = false; prev = isFinite(y) ? y : null; continue; }
+      if (pen) c.lineTo(X(x), Y(y)); else { c.moveTo(X(x), Y(y)); pen = true; } prev = y; }
+    c.stroke(); });
+  if (points.length) {
+    c.strokeStyle = c.fillStyle = COLORS[1]; c.lineWidth = 3;
+    if (opts.join) { c.beginPath(); points.forEach((p, k) => k ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1]))); c.stroke(); }
+    points.forEach(p => { c.beginPath(); c.arc(X(p[0]), Y(p[1]), 6, 0, 7); c.fill(); });
+    $('fitout').textContent = '';
+    if (opts.fit && points.length >= 2) {
+      const n = points.length, mx = points.reduce((a, p) => a + p[0], 0) / n, my = points.reduce((a, p) => a + p[1], 0) / n;
+      const sxx = points.reduce((a, p) => a + (p[0] - mx) ** 2, 0), sxy = points.reduce((a, p) => a + (p[0] - mx) * (p[1] - my), 0), syy = points.reduce((a, p) => a + (p[1] - my) ** 2, 0);
+      const m = sxy / sxx, b = my - m * mx, r2 = sxy * sxy / (sxx * syy);
+      c.strokeStyle = COLORS[2]; c.setLineDash([12, 8]); c.beginPath(); c.moveTo(X(x0), Y(m * x0 + b)); c.lineTo(X(x1), Y(m * x1 + b)); c.stroke(); c.setLineDash([]);
+      $('fitout').textContent = `Best fit: y = ${lbl(m)}x ${b < 0 ? '−' : '+'} ${lbl(Math.abs(b))}   (R² = ${r2.toFixed(4)})`;
+    }
+  }
+  c.restore();
+}
+let timer; const later = () => { clearTimeout(timer); timer = setTimeout(draw, 150); };
+document.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', later));
+document.querySelectorAll('input[type=checkbox]').forEach(el => el.addEventListener('change', draw));
+tabs(['fn', 'data'], t => { mode = t; draw(); });
+$('place').onclick = () => { draw(); placeImage($('cv')); };
+
+})();
+</script>
+</body>
+</html>

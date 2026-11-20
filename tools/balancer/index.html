@@ -1,0 +1,238 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equation balancer</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+  .lab { flex:0 0 120px; font-size:15px; }
+  table.t { border-collapse:collapse; width:100%; font-size:14px; } table.t td, table.t th { padding:4px 6px; text-align:right; } table.t td:first-child, table.t th:first-child { text-align:left; }
+</style>
+</head>
+<body>
+
+<input id="eq" placeholder="e.g. Fe + O2 -> Fe2O3" autocapitalize="off" autocomplete="off" spellcheck="false">
+<div class="row"><button id="go">Balance</button><button class="ghost" id="read">Read from lasso</button></div>
+<div class="muted">Separate species with “ + ” and the sides with -&gt;, → or =. Ion charges like Fe^3+ or SO4^2- are supported.</div>
+<div id="err" class="err"></div>
+<div id="res" class="hide">
+  <div class="card"><div id="out" style="font-size:22px;line-height:1.4"></div>
+    <div class="row"><button class="ghost" id="w">Write on page</button></div></div>
+  <div class="card"><div class="muted">Stoichiometry — enter what you start with (grams)</div>
+    <div id="stoich"></div><div id="st" style="margin-top:8px"></div>
+    <div class="row"><button class="ghost" id="ws">Write result on page</button></div></div>
+</div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const a = t.search(/[\[{]/); if (a < 0) throw bad();
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw bad(); }
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+// Places a canvas on the page as a picture (app 1.5.0+).
+function placeImage(cv) {
+  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast('Placed on your page — move or resize it with the lasso') : toast('Could not place the picture'); }
+  else toast('Update Adv Notes to 1.5.0 or newer to place pictures on the page');
+}
+// ---- shared chemistry data: [symbol, name, atomic mass, Pauling electronegativity or 0] by Z-1 ----
+const EL = `H Hydrogen 1.008 2.20|He Helium 4.0026 0|Li Lithium 6.94 0.98|Be Beryllium 9.0122 1.57|B Boron 10.81 2.04|C Carbon 12.011 2.55|N Nitrogen 14.007 3.04|O Oxygen 15.999 3.44|F Fluorine 18.998 3.98|Ne Neon 20.180 0|Na Sodium 22.990 0.93|Mg Magnesium 24.305 1.31|Al Aluminium 26.982 1.61|Si Silicon 28.085 1.90|P Phosphorus 30.974 2.19|S Sulfur 32.06 2.58|Cl Chlorine 35.45 3.16|Ar Argon 39.95 0|K Potassium 39.098 0.82|Ca Calcium 40.078 1.00|Sc Scandium 44.956 1.36|Ti Titanium 47.867 1.54|V Vanadium 50.942 1.63|Cr Chromium 51.996 1.66|Mn Manganese 54.938 1.55|Fe Iron 55.845 1.83|Co Cobalt 58.933 1.88|Ni Nickel 58.693 1.91|Cu Copper 63.546 1.90|Zn Zinc 65.38 1.65|Ga Gallium 69.723 1.81|Ge Germanium 72.630 2.01|As Arsenic 74.922 2.18|Se Selenium 78.971 2.55|Br Bromine 79.904 2.96|Kr Krypton 83.798 3.00|Rb Rubidium 85.468 0.82|Sr Strontium 87.62 0.95|Y Yttrium 88.906 1.22|Zr Zirconium 91.224 1.33|Nb Niobium 92.906 1.6|Mo Molybdenum 95.95 2.16|Tc Technetium 98 1.9|Ru Ruthenium 101.07 2.2|Rh Rhodium 102.91 2.28|Pd Palladium 106.42 2.20|Ag Silver 107.87 1.93|Cd Cadmium 112.41 1.69|In Indium 114.82 1.78|Sn Tin 118.71 1.96|Sb Antimony 121.76 2.05|Te Tellurium 127.60 2.1|I Iodine 126.90 2.66|Xe Xenon 131.29 2.60|Cs Caesium 132.91 0.79|Ba Barium 137.33 0.89|La Lanthanum 138.91 1.10|Ce Cerium 140.12 1.12|Pr Praseodymium 140.91 1.13|Nd Neodymium 144.24 1.14|Pm Promethium 145 0|Sm Samarium 150.36 1.17|Eu Europium 151.96 0|Gd Gadolinium 157.25 1.20|Tb Terbium 158.93 0|Dy Dysprosium 162.50 1.22|Ho Holmium 164.93 1.23|Er Erbium 167.26 1.24|Tm Thulium 168.93 1.25|Yb Ytterbium 173.05 0|Lu Lutetium 174.97 1.27|Hf Hafnium 178.49 1.3|Ta Tantalum 180.95 1.5|W Tungsten 183.84 2.36|Re Rhenium 186.21 1.9|Os Osmium 190.23 2.2|Ir Iridium 192.22 2.20|Pt Platinum 195.08 2.28|Au Gold 196.97 2.54|Hg Mercury 200.59 2.00|Tl Thallium 204.38 1.62|Pb Lead 207.2 2.33|Bi Bismuth 208.98 2.02|Po Polonium 209 2.0|At Astatine 210 2.2|Rn Radon 222 0|Fr Francium 223 0.7|Ra Radium 226 0.9|Ac Actinium 227 1.1|Th Thorium 232.04 1.3|Pa Protactinium 231.04 1.5|U Uranium 238.03 1.38|Np Neptunium 237 1.36|Pu Plutonium 244 1.28|Am Americium 243 1.3|Cm Curium 247 1.3|Bk Berkelium 247 1.3|Cf Californium 251 1.3|Es Einsteinium 252 1.3|Fm Fermium 257 1.3|Md Mendelevium 258 1.3|No Nobelium 259 1.3|Lr Lawrencium 266 0|Rf Rutherfordium 267 0|Db Dubnium 268 0|Sg Seaborgium 269 0|Bh Bohrium 270 0|Hs Hassium 277 0|Mt Meitnerium 278 0|Ds Darmstadtium 281 0|Rg Roentgenium 282 0|Cn Copernicium 285 0|Nh Nihonium 286 0|Fl Flerovium 289 0|Mc Moscovium 290 0|Lv Livermorium 293 0|Ts Tennessine 294 0|Og Oganesson 294 0`
+  .split('|').map((r, i) => { const [s, n, m, en] = r.split(' '); return { z: i + 1, s, n, m: +m, en: +en || null }; });
+const BY = Object.fromEntries(EL.map(e => [e.s, e]));
+
+// Parses a formula like Ca(OH)2, CuSO4·5H2O, [Fe(CN)6]3-  -> { element: count }
+function parseFormula(f) {
+  f = String(f).replace(/\s+/g, '').replace(/\^?\d*[+-]$/, '');
+  const parts = f.split(/[·•*.]/).filter(Boolean);
+  const total = {};
+  for (let part of parts) {
+    let mult = 1; const lead = part.match(/^(\d+)(.*)$/);
+    if (lead && /[A-Z(\[]/.test(lead[2][0] || '')) { mult = +lead[1]; part = lead[2]; }
+    let i = 0;
+    function group() {
+      const out = {};
+      while (i < part.length) {
+        const c = part[i];
+        if (c === '(' || c === '[') { i++; const g = group(); if (part[i] !== ')' && part[i] !== ']') throw new Error('Missing closing bracket'); i++; const k = num(); for (const e in g) out[e] = (out[e] || 0) + g[e] * k; }
+        else if (c === ')' || c === ']') return out;
+        else if (/[A-Z]/.test(c)) { let s = c; i++; while (i < part.length && /[a-z]/.test(part[i])) s += part[i++]; if (!BY[s]) throw new Error('Unknown element "' + s + '"'); const k = num(); out[s] = (out[s] || 0) + k; }
+        else throw new Error('Unexpected "' + c + '"');
+      }
+      return out;
+    }
+    function num() { let d = ''; while (i < part.length && /\d/.test(part[i])) d += part[i++]; return d ? +d : 1; }
+    const g = group();
+    if (i < part.length) throw new Error('Unexpected "' + part[i] + '"');
+    for (const e in g) total[e] = (total[e] || 0) + g[e] * mult;
+  }
+  if (!Object.keys(total).length) throw new Error('Enter a formula');
+  return total;
+}
+const molarMass = comp => Object.entries(comp).reduce((a, [e, n]) => a + BY[e].m * n, 0);
+const SUB = s => String(s).replace(/\d/g, d => '₀₁₂₃₄₅₆₇₈₉'[d]);
+const prettyFormula = f => String(f).replace(/([A-Za-z)\]])(\d+)/g, (_, a, d) => a + SUB(d)).replace(/\*/g, '·');
+const fmt = (x, d = 4) => !isFinite(x) ? '—' : Math.abs(x) >= 1e5 || (x !== 0 && Math.abs(x) < 1e-3) ? x.toExponential(d - 1).replace(/e\+?(-?)(\d+)/, (_, s, e) => ' × 10' + (s ? '⁻' : '') + [...e].map(c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c]).join('')) : String(+x.toPrecision(d + 1));
+
+// Exact rational arithmetic with BigInt so coefficients come out exact.
+const gcd = (a, b) => { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) [a, b] = [b, a % b]; return a; };
+const fr = (n, d = 1n) => { if (d < 0n) { n = -n; d = -d; } const g = gcd(n, d) || 1n; return [n / g, d / g]; };
+const fsub = (a, b) => fr(a[0] * b[1] - b[0] * a[1], a[1] * b[1]);
+const fmul = (a, b) => fr(a[0] * b[0], a[1] * b[1]);
+const fdiv = (a, b) => fr(a[0] * b[1], a[1] * b[0]);
+const isZero = a => a[0] === 0n;
+
+// "SO4^2-" / "Fe^3+" carry a charge; a bare trailing sign ("Na+", "OH-") means a charge of 1.
+function species(s) {
+  if (/^e-?$/.test(s)) return { f: s, comp: {}, charge: -1 };
+  let charge = 0, f = s, m;
+  if ((m = s.match(/\^(\d*)([+-])$/))) { charge = (m[2] === '+' ? 1 : -1) * (m[1] ? +m[1] : 1); f = s.slice(0, m.index); }
+  else if ((m = s.match(/([+-])$/))) { charge = m[1] === '+' ? 1 : -1; f = s.slice(0, -1); }
+  return { f, raw: s, comp: parseFormula(f), charge };
+}
+let lastBal = null;
+function balance(text) {
+  const sides = text.split(/->|→|⟶|=>|=/);
+  if (sides.length !== 2) throw new Error('Use -> (or →, =) once between the two sides.');
+  const lhs = sides[0].split(/\s\+\s|\s\+(?=[A-Z(\[\d])/).map(x => x.trim()).filter(Boolean);
+  const rhs = sides[1].split(/\s\+\s|\s\+(?=[A-Z(\[\d])/).map(x => x.trim()).filter(Boolean);
+  if (!lhs.length || !rhs.length) throw new Error('Both sides need at least one substance.');
+  const strip = x => x.replace(/^\d+(?=[A-Z(\[])/, '');   // ignore coefficients the user typed
+  const sp = [...lhs, ...rhs].map(x => species(strip(x)));
+  const els = [...new Set(sp.flatMap(s => Object.keys(s.comp)))];
+  const rows = els.map(e => sp.map((s, j) => fr(BigInt((s.comp[e] || 0) * (j < lhs.length ? 1 : -1)))));
+  if (sp.some(s => s.charge)) rows.push(sp.map((s, j) => fr(BigInt(s.charge * (j < lhs.length ? 1 : -1)))));
+  // Reduced row echelon form
+  const A = rows.map(r => r.slice()), n = sp.length; let r = 0; const piv = [];
+  for (let c = 0; c < n && r < A.length; c++) {
+    let p = A.findIndex((row, i) => i >= r && !isZero(row[c])); if (p < 0) continue;
+    [A[r], A[p]] = [A[p], A[r]];
+    const pv = A[r][c]; A[r] = A[r].map(x => fdiv(x, pv));
+    for (let i = 0; i < A.length; i++) if (i !== r && !isZero(A[i][c])) { const k = A[i][c]; A[i] = A[i].map((x, j) => fsub(x, fmul(k, A[r][j]))); }
+    piv.push(c); r++;
+  }
+  const free = [...Array(n).keys()].filter(c => !piv.includes(c));
+  if (free.length === 0) throw new Error("This can't be balanced — check the formulas.");
+  if (free.length > 1) throw new Error('This has more than one independent balance (it mixes separate reactions). Split it up.');
+  const fc = free[0]; const x = Array(n).fill(null); x[fc] = fr(1n);
+  piv.forEach((c, i) => { x[c] = fr(-A[i][fc][0], A[i][fc][1]); });
+  let L = 1n; x.forEach(v => { L = L * v[1] / gcd(L, v[1]); });
+  let ints = x.map(v => v[0] * (L / v[1]));
+  let G = 0n; ints.forEach(v => G = gcd(G, v)); ints = ints.map(v => v / G);
+  if (ints.every(v => v <= 0n)) ints = ints.map(v => -v);
+  if (ints.some(v => v <= 0n)) throw new Error("No balance with every substance on its side — check that the formulas are right.");
+  return { lhs: lhs.map(strip), rhs: rhs.map(strip), sp, coef: ints.map(Number) };
+}
+const showSp = s => prettyFormula(s.replace(/\^(\d*)([+-])$/, (_, d, c) => (d ? d.replace(/\d/g, x => '⁰¹²³⁴⁵⁶⁷⁸⁹'[x]) : '') + (c === '+' ? '⁺' : '⁻')));
+function eqText(b) {
+  const t = (arr, off) => arr.map((s, i) => (b.coef[i + off] === 1 ? '' : b.coef[i + off]) + showSp(s)).join(' + ');
+  return t(b.lhs, 0) + ' → ' + t(b.rhs, b.lhs.length);
+}
+function run() {
+  $('err').textContent = ''; const t = $('eq').value.trim(); db.set('last', t);
+  if (!t) return;
+  try { lastBal = balance(t); } catch (e) { $('err').textContent = e.message; $('res').classList.add('hide'); return; }
+  $('res').classList.remove('hide');
+  $('out').textContent = eqText(lastBal);
+  $('stoich').innerHTML = lastBal.lhs.map((s, i) => `<div class="row"><span class="lab">${esc(showSp(s))}</span><input data-i="${i}" inputmode="decimal" placeholder="g"></div>`).join('');
+  $('stoich').querySelectorAll('input').forEach(i => i.oninput = stoich);
+  $('st').innerHTML = '';
+}
+let stoichText = '';
+function stoich() {
+  const b = lastBal, ins = [...$('stoich').querySelectorAll('input')];
+  const given = ins.map(i => parseFloat(i.value.replace(',', '.'))).map((g, i) => ({ i, g, M: molarMass(b.sp[i].comp) })).filter(x => isFinite(x.g) && x.g > 0);
+  if (!given.length) { $('st').innerHTML = ''; return; }
+  const ext = given.map(x => ({ ...x, n: x.g / x.M, e: x.g / x.M / b.coef[x.i] }));
+  const lim = ext.reduce((a, c) => c.e < a.e ? c : a); const xi = lim.e;
+  let h = `<div><b>Limiting reagent: ${esc(showSp(b.lhs[lim.i]))}</b>${given.length === 1 ? ' <span class="muted">(only one amount given — the others are assumed in excess)</span>' : ''}</div><table class="t"><tr><th></th><th>mol</th><th>g</th></tr>`;
+  stoichText = `${eqText(b)}; limiting: ${showSp(b.lhs[lim.i])}`;
+  ext.forEach(x => { if (x !== lim) { const left = x.g - xi * b.coef[x.i] * x.M; h += `<tr><td>${esc(showSp(b.lhs[x.i]))} left over</td><td>${fmt(left / x.M)}</td><td>${fmt(left)}</td></tr>`; } });
+  b.rhs.forEach((s, k) => { const j = b.lhs.length + k, M = molarMass(b.sp[j].comp), n = xi * b.coef[j];
+    h += `<tr><td>${esc(showSp(s))} formed</td><td>${fmt(n)}</td><td>${fmt(n * M)}</td></tr>`; stoichText += `; ${showSp(s)}: ${fmt(n * M)} g`; });
+  $('st').innerHTML = h + '</table>';
+}
+$('go').onclick = run;
+$('eq').onkeydown = e => { if (e.key === 'Enter') run(); };
+$('w').onclick = () => lastBal && insert(eqText(lastBal));
+$('ws').onclick = () => stoichText && insert(stoichText);
+$('read').onclick = async () => {
+  $('err').textContent = ''; $('read').disabled = true; $('read').textContent = 'Reading…';
+  try {
+    const t = await ask('Transcribe the chemical equation in the attached image as plain text, using formulas like H2SO4, "+" between substances and "->" between the sides. Leave out any coefficients. Reply with the equation only.', { image: 'selection' });
+    $('eq').value = t.split('\n').map(x => x.trim()).filter(Boolean)[0] || ''; run();
+  } catch (e) { $('err').textContent = e.message; }
+  $('read').disabled = false; $('read').textContent = 'Read from lasso';
+};
+$('eq').value = db.get('last', 'Fe + O2 -> Fe2O3'); run();
+
+})();
+</script>
+</body>
+</html>

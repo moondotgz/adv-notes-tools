@@ -56,6 +56,28 @@
       ]
     },
     {
+      "id": "balancer",
+      "name": "Equation balancer",
+      "description": "Balances chemical equations exactly (ions too), reads one from your lasso, and finds the limiting reagent and product masses.",
+      "icon": "science",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/balancer",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 16777,
+          "sha256": "ce73bf3668bd831f1cbffa22f4eb9b49e67b869884cdcc30a0da727ec1defbb1"
+        },
+        {
+          "path": "manifest.json",
+          "size": 316,
+          "sha256": "ac7de0cbfcb827a59fffaf035f82f91f1ffe99545ec3f4f3de7f42147b6f4f07"
+        }
+      ]
+    },
+    {
       "id": "feynman",
       "name": "Feynman explainer",
       "description": "Explain a concept in your own words and the AI points out gaps, errors and jargon, then asks a deeper question.",
@@ -166,6 +188,72 @@
       ]
     },
     {
+      "id": "graph",
+      "name": "Graph plotter",
+      "description": "Plot functions or data points (with a best-fit line) and place the graph on your page.",
+      "icon": "graph",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/graph",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 15248,
+          "sha256": "9d6ecad0c88e55a04fbd99012b6d55adc3b7abf9640a80f04782b82bf0c184f3"
+        },
+        {
+          "path": "manifest.json",
+          "size": 268,
+          "sha256": "b93ef526dcfe6f173ea222b20c03e61a35c7716bfbe7fde0428f3b2bddc3f25e"
+        }
+      ]
+    },
+    {
+      "id": "mistakes",
+      "name": "Mistake log",
+      "description": "Capture mistakes with the lasso, note the right answer, and review them on a spaced schedule until they stick.",
+      "icon": "book",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/mistakes",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 10087,
+          "sha256": "ff408cec0043a2ad1f1ee0378e8667d881b14874abe97bfa3b750364ee10de44"
+        },
+        {
+          "path": "manifest.json",
+          "size": 292,
+          "sha256": "8ef44275862a72e327d8162ec332864bdb74ac7d4835d3d4f17f13c90a9cdbac"
+        }
+      ]
+    },
+    {
+      "id": "molarmass",
+      "name": "Molar mass",
+      "description": "Molar mass and composition of any formula, with gram / mole / particle / gas-volume conversions.",
+      "icon": "calculate",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/molarmass",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 12384,
+          "sha256": "1c1b6c2fe51be1de4aa9e07d33f36f65822fd0b4564286b513c5db8a5b7b1fe7"
+        },
+        {
+          "path": "manifest.json",
+          "size": 283,
+          "sha256": "ab2965e057d1698f7511b274a824419a5f68d82ca7218249061ce92081279dc0"
+        }
+      ]
+    },
+    {
       "id": "pdfreader",
       "name": "PDF reader",
       "description": "Read PDFs next to your notes: table of contents, bookmarks, search, cite a page, ask AI about a page",
@@ -204,6 +292,28 @@
           "path": "pdfjs/pdf.worker.min.js",
           "size": 1417586,
           "sha256": "bd88805178a26c729db8c0107a5b630cb900ec070f4d8c7529a3e45530afd41d"
+        }
+      ]
+    },
+    {
+      "id": "periodic",
+      "name": "Periodic table",
+      "description": "Tap an element for its mass, electron configuration, orbital boxes and quantum numbers; write it or place an orbital diagram on the page.",
+      "icon": "science",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/periodic",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 17524,
+          "sha256": "7cc6d6752be720d68566ecf84f4bbcc81ec2dcba2d45590368ea901914662e2d"
+        },
+        {
+          "path": "manifest.json",
+          "size": 325,
+          "sha256": "6def92fa6cec35bd7fbc5643c49d96f0261eb92bb45ee9c1d444abb2a5652975"
         }
       ]
     },
@@ -252,6 +362,28 @@
       ]
     },
     {
+      "id": "table",
+      "name": "Table builder",
+      "description": "Build a neat table grid, optionally with typed headers, and place it on your page to fill in.",
+      "icon": "table",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/table",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 8846,
+          "sha256": "809dfd024716c50b720279addee35221a783948efe5cfcdccc404242411855aa"
+        },
+        {
+          "path": "manifest.json",
+          "size": 275,
+          "sha256": "ccd8fe65fd796dbc0d498819b355787aad3423b29f786604721c3e8b9ce21180"
+        }
+      ]
+    },
+    {
       "id": "tamagotchi",
       "name": "Tamagotchi",
       "description": "A virtual pet that lives next to your notes: feed it, play, clean up and let it sleep. It keeps getting hungry while you're away.",
@@ -270,6 +402,28 @@
           "path": "manifest.json",
           "size": 315,
           "sha256": "754ccdbc3a365e8004b37b1f351fd9c561777cc4783ae8d519931e2df54963e5"
+        }
+      ]
+    },
+    {
+      "id": "units",
+      "name": "Unit converter",
+      "description": "Converts length, mass, volume, pressure, energy, temperature, amount, concentration and more.",
+      "icon": "calculate",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/units",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 8425,
+          "sha256": "80b01c98759d743ef36f16248ad15945fe58cdf667f2f6c2582b28c8e773b821"
+        },
+        {
+          "path": "manifest.json",
+          "size": 280,
+          "sha256": "96251f9c33aa1b597f27ab3c3d61a2afed57ce079fa002d23d12168e5ddbae8e"
         }
       ]
     }

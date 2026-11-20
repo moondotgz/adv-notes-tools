@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Table builder</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
+  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:520px; margin-inline:auto; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  input, select, textarea, button { font:inherit; padding:10px; border-radius:10px; border:0; background:var(--field); color:var(--fg); }
+  input, textarea, select { width:100%; }
+  textarea { resize:vertical; min-height:80px; }
+  button { background:var(--accent); color:var(--bg); cursor:pointer; }
+  button.ghost { background:var(--field); color:var(--fg); }
+  button:disabled { opacity:.4; cursor:default; }
+  .row { display:flex; gap:8px; margin:8px 0; align-items:center; }
+  .row > * { flex:1; min-width:0; }
+  .row > .fit { flex:0 0 auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tabs button { flex:1; background:var(--field); color:var(--fg); padding:8px 4px; font-size:14px; }
+  .tabs button.on { background:var(--accent); color:var(--bg); }
+  .card { background:var(--field); border-radius:14px; padding:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:14px; }
+  .hide { display:none !important; }
+  .err { color:var(--bad); font-size:14px; }
+  .pre { white-space:pre-wrap; }
+  .lab { font-size:14px; color:var(--muted); } label { font-size:14px; display:flex; gap:6px; align-items:center; } label input { width:auto !important; }
+  .cells { display:grid; gap:4px; margin:8px 0; overflow-x:auto; } .cells input { padding:6px; font-size:14px; min-width:60px; }
+  #cv { width:100%; background:#fff; border-radius:10px; margin:8px 0; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="row"><label class="fit lab">Rows</label><input id="rows" type="number" min="1" max="30" value="4"><label class="fit lab">Columns</label><input id="cols" type="number" min="1" max="12" value="4"></div>
+  <div class="row"><label class="fit lab">Row height</label><input id="rh" type="range" min="30" max="120" value="56"><label class="fit lab">Column width</label><input id="cw" type="range" min="40" max="240" value="110"></div>
+  <div class="row"><label class="fit"><input type="checkbox" id="hr" checked> Header row</label><label class="fit"><input type="checkbox" id="hc"> Header column</label><label class="fit"><input type="checkbox" id="outer" checked> Outer border</label></div>
+  <div class="row"><label class="fit"><input type="checkbox" id="inner" checked> Inner lines</label><label class="fit"><input type="checkbox" id="first" > Wider first column</label></div>
+</div>
+<div class="muted">Type into cells (optional) — leave them empty to fill in by hand.</div>
+<div id="cells" class="cells"></div>
+<canvas id="cv"></canvas>
+<div class="row"><button id="place">Place on page</button><button class="ghost" id="clear">Clear cells</button></div>
+
+<script src="../lib/advnotes.js"></script>
+<script>
+(() => {
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const A = window.AdvNotes;
+const db = {
+  get(k, d) {
+    try {
+      if (A && A.storage && A.storage.getJSON) return A.storage.getJSON(k, d);
+      const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v);
+    } catch { return d; }
+  },
+  set(k, v) {
+    try {
+      if (A && A.storage && A.storage.setJSON) return A.storage.setJSON(k, v);
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  }
+};
+function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
+function insert(t) {
+  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+}
+// Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
+async function ask(prompt, opts = {}) {
+  if (!A || !A.ask) throw new Error('AI is not available here.');
+  const r = await A.ask(prompt, opts);
+  return typeof r === 'string' ? r : (r && r.text) || '';
+}
+// Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
+function parseJSON(t) {
+  t = t.replace(/```(?:json)?/gi, '');
+  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const a = t.search(/[\[{]/); if (a < 0) throw bad();
+  const open = t[a], close = open === '[' ? ']' : '}';
+  const b = t.lastIndexOf(close);
+  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { throw bad(); }
+}
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const dayNum = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+function tabs(ids, onchange) {
+  const bs = [...document.querySelectorAll('.tabs button')];
+  bs.forEach(b => b.onclick = () => {
+    bs.forEach(x => x.classList.toggle('on', x === b));
+    ids.forEach(i => $(i).classList.toggle('hide', i !== b.dataset.t));
+    onchange && onchange(b.dataset.t);
+  });
+  bs[0].click();
+}
+
+// Places a canvas on the page as a picture (app 1.5.0+).
+function placeImage(cv) {
+  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast('Placed on your page — move or resize it with the lasso') : toast('Could not place the picture'); }
+  else toast('Update Adv Notes to 1.5.0 or newer to place pictures on the page');
+}
+let st = db.get('table', { rows: 4, cols: 4, rh: 56, cw: 110, hr: true, hc: false, outer: true, inner: true, first: false, cells: {} });
+['rows','cols','rh','cw'].forEach(k => $(k).value = st[k]); ['hr','hc','outer','inner','first'].forEach(k => $(k).checked = st[k]);
+function read() {
+  st.rows = Math.max(1, Math.min(30, +$('rows').value || 1)); st.cols = Math.max(1, Math.min(12, +$('cols').value || 1));
+  st.rh = +$('rh').value; st.cw = +$('cw').value; ['hr','hc','outer','inner','first'].forEach(k => st[k] = $(k).checked);
+}
+function renderCells() {
+  read();
+  $('cells').style.gridTemplateColumns = `repeat(${st.cols}, minmax(60px, 1fr))`;
+  let h = ''; for (let r = 0; r < st.rows; r++) for (let c = 0; c < st.cols; c++) {
+    const head = (st.hr && r === 0) || (st.hc && c === 0);
+    h += `<input data-k="${r},${c}" value="${esc(st.cells[r + ',' + c] || '')}" placeholder="${head ? 'header' : ''}" style="${head ? 'font-weight:600' : ''}">`;
+  }
+  $('cells').innerHTML = h;
+  $('cells').querySelectorAll('input').forEach(i => i.oninput = () => { st.cells[i.dataset.k] = i.value; draw(); });
+  draw();
+}
+function draw() {
+  read(); db.set('table', st);
+  const S = 2, ws = Array.from({ length: st.cols }, (_, c) => (c === 0 && st.first ? st.cw * 1.8 : st.cw) * S), H = st.rh * S, pad = 6 * S;
+  const W = ws.reduce((a, b) => a + b, 0), cv = $('cv');
+  cv.width = W + pad * 2; cv.height = H * st.rows + pad * 2;
+  const c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height); c.translate(pad, pad);
+  c.strokeStyle = c.fillStyle = '#1a1a1a'; c.lineCap = 'round';
+  const xs = [0]; ws.forEach(w => xs.push(xs[xs.length - 1] + w));
+  const line = (x0, y0, x1, y1, w) => { c.lineWidth = w; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); };
+  const thin = 2 * S, thick = 3.5 * S;
+  for (let r = 1; r < st.rows; r++) if (st.inner || (st.hr && r === 1)) line(0, r * H, W, r * H, st.hr && r === 1 ? thick : thin);
+  for (let k = 1; k < st.cols; k++) if (st.inner || (st.hc && k === 1)) line(xs[k], 0, xs[k], H * st.rows, st.hc && k === 1 ? thick : thin);
+  if (st.outer) { c.lineWidth = thick; c.strokeRect(0, 0, W, H * st.rows); }
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  for (let r = 0; r < st.rows; r++) for (let k = 0; k < st.cols; k++) {
+    const t = st.cells[r + ',' + k]; if (!t) continue;
+    const head = (st.hr && r === 0) || (st.hc && k === 0);
+    let size = Math.min(H * 0.5, 22 * S); c.font = `${head ? '600 ' : ''}${size}px sans-serif`;
+    while (c.measureText(t).width > ws[k] - 10 * S && size > 8) { size -= 1; c.font = `${head ? '600 ' : ''}${size}px sans-serif`; }
+    c.fillText(t, xs[k] + ws[k] / 2, r * H + H / 2);
+  }
+}
+['rows','cols'].forEach(k => $(k).oninput = renderCells);
+['rh','cw'].forEach(k => $(k).oninput = draw);
+['hr','hc','outer','inner','first'].forEach(k => $(k).onchange = renderCells);
+$('clear').onclick = () => { st.cells = {}; renderCells(); };
+$('place').onclick = () => { draw(); placeImage($('cv')); };
+renderCells();
+
+})();
+</script>
+</body>
+</html>

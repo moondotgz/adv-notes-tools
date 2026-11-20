@@ -1,0 +1,10 @@
+{
+  "id": "table",
+  "name": "Table builder",
+  "description": "Build a neat table grid, optionally with typed headers, and place it on your page to fill in.",
+  "entry": "index.html",
+  "icon": "table",
+  "version": "1.0.0",
+  "author": "Adv Notes",
+  "category": "Study"
+}
