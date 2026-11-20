@@ -5,14 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tamagotchi</title>
 <style>
-  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --accent:#2d4bd8; --field:#f2f3f7; --good:#2e9e5b; --warn:#e0a020; --bad:#d64545; }
-  [data-theme="dark"] { --bg:#1b1c20; --fg:#e8e8ec; --muted:#9a9aa5; --accent:#b3c3ff; --field:#2a2c33; --good:#5fd08a; --warn:#f0c050; --bad:#ff7b7b; }
+  /* Colours come from the app (Material You, set as --an-* by advnotes.js); the fallbacks are the app's own palette. */
+  :root {
+    --bg: var(--an-background, #F5F2FA); --fg: var(--an-onSurface, #1C1B1F); --muted: var(--an-onSurfaceVariant, #49454F);
+    --accent: var(--an-primary, #3557D6); --on-accent: var(--an-onPrimary, #FFFFFF);
+    --tonal: var(--an-secondaryContainer, #E0E0F9); --on-tonal: var(--an-onSecondaryContainer, #1D192B);
+    --field: var(--an-surfaceContainerHighest, #E3E1E9); --card: var(--an-surfaceContainerHigh, #E9E7EF);
+    --line: var(--an-outlineVariant, #CAC4D0); --outline: var(--an-outline, #79747E);
+    --good: var(--an-tertiary, #0F8B6F); --warn:#C98A00; --bad: var(--an-error, #B3261E);
+  }
+  [data-theme="dark"] {
+    --bg: var(--an-background, #1E1F25); --fg: var(--an-onSurface, #E6E1E5); --muted: var(--an-onSurfaceVariant, #CAC4D0);
+    --accent: var(--an-primary, #B8C4FF); --on-accent: var(--an-onPrimary, #1B2C70);
+    --tonal: var(--an-secondaryContainer, #444659); --on-tonal: var(--an-onSecondaryContainer, #E8DEF8);
+    --field: var(--an-surfaceContainerHighest, #34343A); --card: var(--an-surfaceContainerHigh, #292A2F);
+    --line: var(--an-outlineVariant, #49454F); --outline: var(--an-outline, #938F99);
+    --good: var(--an-tertiary, #7FD8BF); --warn:#F0C050; --bad: var(--an-error, #F2B8B5);
+  }
   * { box-sizing: border-box; }
-  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif; max-width:420px; margin-inline:auto; }
-  button { font:inherit; padding:10px 6px; border-radius:10px; border:0; background:var(--accent); color:var(--bg); cursor:pointer; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:16px/1.4 Roboto,system-ui,sans-serif; max-width:420px; margin-inline:auto; }
+  button { font:inherit; font-size:14px; font-weight:600; min-height:40px; padding:10px 6px; border-radius:20px; border:0; background:var(--accent); color:var(--on-accent); cursor:pointer; }
   button:disabled { opacity:.4; cursor:default; }
-  button.ghost { background:var(--field); color:var(--fg); }
-  .screen { background:var(--field); border-radius:20px; height:200px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  button.ghost { background:var(--tonal); color:var(--on-tonal); }
+  .screen { background:var(--card); border-radius:24px; height:200px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
   .screen.night { filter:brightness(.55); }
   #pet { font-size:92px; line-height:1; user-select:none; cursor:pointer; transition:transform .2s; }
   #pet.bounce { animation:bounce .5s; }
@@ -27,7 +42,7 @@
   .bar { flex:1; height:10px; background:var(--field); border-radius:6px; overflow:hidden; }
   .bar i { display:block; height:100%; border-radius:6px; transition:width .4s, background .4s; }
   .actions { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:14px 0 8px; }
-  .actions button { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:13px; }
+  .actions button { border-radius:18px; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:13px; }
   .actions b { font-size:22px; font-weight:400; }
   .row { display:flex; gap:8px; }
   .row button { flex:1; }

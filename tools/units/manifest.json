@@ -4,7 +4,7 @@
   "description": "Converts length, mass, volume, pressure, energy, temperature, amount, concentration and more.",
   "entry": "index.html",
   "icon": "calculate",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Adv Notes",
   "category": "Study"
 }

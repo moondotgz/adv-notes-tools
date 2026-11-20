@@ -6,20 +6,20 @@
       "name": "Constants",
       "description": "Physical, chemical, maths and astronomy constants with units. Search, copy, add your own and write any of them onto the page.",
       "icon": "science",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/constants",
       "files": [
         {
           "path": "index.html",
-          "size": 10793,
-          "sha256": "a3dcaf78e763879fb9999e5dd4d94ced3b81317fddd12f6a50c5377270a02d43"
+          "size": 12791,
+          "sha256": "fa47e66724f9eb853e5c5793942bdc4edbf51d5f4f73acd0642916f634791925"
         },
         {
           "path": "manifest.json",
           "size": 309,
-          "sha256": "7658f57e24a1a2e191f7ffd4a6692a196a96a61637f740069c4b66a7eb5e390d"
+          "sha256": "42ea7d3c6c66a254b059e8de7d4afadd0fb5ee62261d1988574371fb2ee9e94d"
         }
       ]
     },
@@ -60,20 +60,20 @@
       "name": "Equation balancer",
       "description": "Balances chemical equations exactly (ions too), reads one from your lasso, and finds the limiting reagent and product masses.",
       "icon": "science",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/balancer",
       "files": [
         {
           "path": "index.html",
-          "size": 16777,
-          "sha256": "ce73bf3668bd831f1cbffa22f4eb9b49e67b869884cdcc30a0da727ec1defbb1"
+          "size": 18775,
+          "sha256": "49e86328af0748add97a21246b0fa7810a7e750b0e0d3ab2a13b0efef25b22b9"
         },
         {
           "path": "manifest.json",
           "size": 316,
-          "sha256": "ac7de0cbfcb827a59fffaf035f82f91f1ffe99545ec3f4f3de7f42147b6f4f07"
+          "sha256": "50415da3a9cef4440487548eb1957f9bbcd9efb453a6ad977e440632ccb0d02e"
         }
       ]
     },
@@ -82,20 +82,20 @@
       "name": "Feynman explainer",
       "description": "Explain a concept in your own words and the AI points out gaps, errors and jargon, then asks a deeper question.",
       "icon": "chat",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/feynman",
       "files": [
         {
           "path": "index.html",
-          "size": 6739,
-          "sha256": "8c7742434a3581cf77b02256d74bb890a86f32096c6d5aba580b68c4f6933d32"
+          "size": 8737,
+          "sha256": "9e86413d709c104438b3d458ea3da027502c6233a00121e9e00c1f34b44150a6"
         },
         {
           "path": "manifest.json",
           "size": 298,
-          "sha256": "08071d4f071619ef509fe2db8695cdfb2530a787b492519e3db4d23db2dde53f"
+          "sha256": "65831474f134d775c94fac9068e9b72d732df1ab09ede2f6000cba7178815e6c"
         }
       ]
     },
@@ -104,20 +104,20 @@
       "name": "Flashcards",
       "description": "Spaced-repetition flashcards. Add cards by hand or let the AI write them from your page, then review what's due.",
       "icon": "book",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/flashcards",
       "files": [
         {
           "path": "index.html",
-          "size": 10090,
-          "sha256": "2073337f63076ed41597c6fe13147719124889f7042f17b0367506df1ef56004"
+          "size": 12088,
+          "sha256": "407cae8f74700397dc62db719a0829c36d477c9395b6fd6b44fd0e3796a8d5b1"
         },
         {
           "path": "manifest.json",
           "size": 295,
-          "sha256": "8236dc920972c1b7257b824b4275e321c8ad07db4d835e9f826bbcf7fe5da033"
+          "sha256": "2e2b540eb259f11070db225a416cac8e66aad5a918d8549888124ce8b60c5cac"
         }
       ]
     },
@@ -126,20 +126,20 @@
       "name": "Focus timer",
       "description": "Pomodoro timer with focus and break cycles, a daily study total and a weekly chart. Write your study time onto the page.",
       "icon": "timer",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/pomodoro",
       "files": [
         {
           "path": "index.html",
-          "size": 9704,
-          "sha256": "054a76975e8869404c9fc4e9afd6a6713a282445ddce1e2a0abc05975c5a899b"
+          "size": 11702,
+          "sha256": "c064ccb421a77d774ab5bb58bec2786a50db01434aae7e16c17105eb028056ee"
         },
         {
           "path": "manifest.json",
           "size": 303,
-          "sha256": "847d5b98a0ae6471506b216f0a124810c87b17eb736f89453042cb2478f14511"
+          "sha256": "5797308ea8bf88803450328d4f0522986ca4b8b942d60c3d545e3ddce8f486d9"
         }
       ]
     },
@@ -148,20 +148,20 @@
       "name": "Formula sheet",
       "description": "Searchable formulas for maths, stats, physics, chemistry and finance. Add your own and write any of them onto the page.",
       "icon": "functions",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/formulas",
       "files": [
         {
           "path": "index.html",
-          "size": 8588,
-          "sha256": "683e5823678b7a7162a0375ae34f1bc4da61ecb1348a1ce9803aa340851e73f6"
+          "size": 10586,
+          "sha256": "89514041bb44d63a76e44dc5b0e781bfcbbea402ffabcafbca64f9bf29dd7969"
         },
         {
           "path": "manifest.json",
           "size": 308,
-          "sha256": "9934a666e2c7ceb3a6c24eb1bde3260726203e0425b92d09c45cd68861d70274"
+          "sha256": "51512e60eed8917b89dfccf5b5340269530c83f3aedb8a8b9a976956ef63c17e"
         }
       ]
     },
@@ -170,20 +170,20 @@
       "name": "Glossary builder",
       "description": "Collect terms as you study, let the AI define them or find them on your page, then write the glossary onto the page.",
       "icon": "translate",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/glossary",
       "files": [
         {
           "path": "index.html",
-          "size": 7661,
-          "sha256": "7ce3bdaae7ac23d0db714c6e1a555e03751446f8e9ca9a2617240e9f0f980c48"
+          "size": 9659,
+          "sha256": "4e9b86b10e13f2964dd5f60c11d44b1f72cbe499ffc90afb3e67d6d44a4ad870"
         },
         {
           "path": "manifest.json",
           "size": 308,
-          "sha256": "afa2bc69c97e5c85006e241257d7d4d011de73e2e653948044e5193a7719ef7d"
+          "sha256": "468491d13ba7fdec5b6bb75e33894cfca7b6b238ea05f34adad66a6dd3788637"
         }
       ]
     },
@@ -192,20 +192,20 @@
       "name": "Graph plotter",
       "description": "Plot functions or data points (with a best-fit line) and place the graph on your page.",
       "icon": "graph",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/graph",
       "files": [
         {
           "path": "index.html",
-          "size": 15248,
-          "sha256": "9d6ecad0c88e55a04fbd99012b6d55adc3b7abf9640a80f04782b82bf0c184f3"
+          "size": 17246,
+          "sha256": "33e7f290aea23e9b22d43917ae1d7220ee80580c33e641a85e4b5be9c290c8cd"
         },
         {
           "path": "manifest.json",
           "size": 268,
-          "sha256": "b93ef526dcfe6f173ea222b20c03e61a35c7716bfbe7fde0428f3b2bddc3f25e"
+          "sha256": "01032eaf03a2f994d03d76562d779c20bc6b6897b3baaa723a252c1b3a68869d"
         }
       ]
     },
@@ -214,20 +214,20 @@
       "name": "Mistake log",
       "description": "Capture mistakes with the lasso, note the right answer, and review them on a spaced schedule until they stick.",
       "icon": "book",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/mistakes",
       "files": [
         {
           "path": "index.html",
-          "size": 10087,
-          "sha256": "ff408cec0043a2ad1f1ee0378e8667d881b14874abe97bfa3b750364ee10de44"
+          "size": 12085,
+          "sha256": "7a0a585b98488aa8bf5ae0207f41164fff25f030fc69d3c7d5dac53d807cbc2e"
         },
         {
           "path": "manifest.json",
           "size": 292,
-          "sha256": "8ef44275862a72e327d8162ec332864bdb74ac7d4835d3d4f17f13c90a9cdbac"
+          "sha256": "593a0b69c9cad5d2dc728e6988e81c0af1e904449c9b38bcb82bab082567bf35"
         }
       ]
     },
@@ -236,20 +236,20 @@
       "name": "Molar mass",
       "description": "Molar mass and composition of any formula, with gram / mole / particle / gas-volume conversions.",
       "icon": "calculate",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/molarmass",
       "files": [
         {
           "path": "index.html",
-          "size": 12384,
-          "sha256": "1c1b6c2fe51be1de4aa9e07d33f36f65822fd0b4564286b513c5db8a5b7b1fe7"
+          "size": 14382,
+          "sha256": "a56a967737d81ce71ce3201c5cfad0c39c3b9cf1f0841382265ddba081cb082d"
         },
         {
           "path": "manifest.json",
           "size": 283,
-          "sha256": "ab2965e057d1698f7511b274a824419a5f68d82ca7218249061ce92081279dc0"
+          "sha256": "f410f5ebc1d84439da262d9c3aa0aad2ed689e6b644c0521b2b10245311cdd37"
         }
       ]
     },
@@ -300,20 +300,20 @@
       "name": "Periodic table",
       "description": "Tap an element for its mass, electron configuration, orbital boxes and quantum numbers; write it or place an orbital diagram on the page.",
       "icon": "science",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/periodic",
       "files": [
         {
           "path": "index.html",
-          "size": 17524,
-          "sha256": "7cc6d6752be720d68566ecf84f4bbcc81ec2dcba2d45590368ea901914662e2d"
+          "size": 19522,
+          "sha256": "3e4d848ea5bf66f8160f7b0f7b44406506cfefb8126c1a8465e512da7c56b2a8"
         },
         {
           "path": "manifest.json",
           "size": 325,
-          "sha256": "6def92fa6cec35bd7fbc5643c49d96f0261eb92bb45ee9c1d444abb2a5652975"
+          "sha256": "887358ff9f790f88209c6a0ccc2ff4b08b85c55d00c233292140a5482c089ec2"
         }
       ]
     },
@@ -322,20 +322,20 @@
       "name": "Quiz me",
       "description": "The AI writes a multiple-choice quiz from a topic or your page, marks your answers and remembers your weak topics so you can drill them.",
       "icon": "science",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/quiz",
       "files": [
         {
           "path": "index.html",
-          "size": 9405,
-          "sha256": "81365163f2de5b13f9637a164d00d9eeb1a441fe49449693e626a2b201893203"
+          "size": 11403,
+          "sha256": "db28c5ddde81c85df3c0e65518d0b05afd2ed11b275ac0620ddaa174f3a1e828"
         },
         {
           "path": "manifest.json",
           "size": 313,
-          "sha256": "277ebabb3edda0380e96b0ae38bb3635fa62003cf0a87a78c1e0501f8af842f8"
+          "sha256": "3671fef8865eafbabff5b35b5f0d37c89c565d9bf63c6878e1fc990db22a80a9"
         }
       ]
     },
@@ -344,20 +344,20 @@
       "name": "Study streak",
       "description": "Check in each day you study and watch your streak and a calendar heatmap grow.",
       "icon": "map",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/streak",
       "files": [
         {
           "path": "index.html",
-          "size": 7792,
-          "sha256": "05f3b79cfbb6cffc20334fcd68608cdedd601c431000d6544e832a1af943c8ad"
+          "size": 9790,
+          "sha256": "b1f12a98ec3046edbaf5841200add5a8fab561416a2a7cfb2c19d489876aab0c"
         },
         {
           "path": "manifest.json",
           "size": 258,
-          "sha256": "238b97d68dead1231efd331934ad134132f4be9319ca37bfba2c9db8fec6ddcd"
+          "sha256": "ff0a23f1a1a46227e602ef82a90d506d359c7638608b89ab0dd209a30a31a1fc"
         }
       ]
     },
@@ -366,20 +366,20 @@
       "name": "Table builder",
       "description": "Build a neat table grid, optionally with typed headers, and place it on your page to fill in.",
       "icon": "table",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/table",
       "files": [
         {
           "path": "index.html",
-          "size": 8846,
-          "sha256": "809dfd024716c50b720279addee35221a783948efe5cfcdccc404242411855aa"
+          "size": 10844,
+          "sha256": "5e9e237101c44fba991a2b597ac20cc9654bdbe45c0c44569fbb623b3406e79b"
         },
         {
           "path": "manifest.json",
           "size": 275,
-          "sha256": "ccd8fe65fd796dbc0d498819b355787aad3423b29f786604721c3e8b9ce21180"
+          "sha256": "9ebaa1a17aa1df6e1d498f03a7fc018dba1eaaf94005bc45d26996ae5038bf19"
         }
       ]
     },
@@ -388,20 +388,20 @@
       "name": "Tamagotchi",
       "description": "A virtual pet that lives next to your notes: feed it, play, clean up and let it sleep. It keeps getting hungry while you're away.",
       "icon": "extension",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Fun",
       "path": "tools/tamagotchi",
       "files": [
         {
           "path": "index.html",
-          "size": 10123,
-          "sha256": "8b41a426815f6e6c17f3a7d309e99087840bc634fc4c19d59ddc48500aaab210"
+          "size": 11283,
+          "sha256": "59d62201a8179f168066876fb635cabdb8d8ba831608f11800c466cf61c01368"
         },
         {
           "path": "manifest.json",
           "size": 315,
-          "sha256": "754ccdbc3a365e8004b37b1f351fd9c561777cc4783ae8d519931e2df54963e5"
+          "sha256": "4a9a0994351b74f271121456c81b28333f62d3250490df616fdfd03801360592"
         }
       ]
     },
@@ -410,20 +410,20 @@
       "name": "Unit converter",
       "description": "Converts length, mass, volume, pressure, energy, temperature, amount, concentration and more.",
       "icon": "calculate",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/units",
       "files": [
         {
           "path": "index.html",
-          "size": 8425,
-          "sha256": "80b01c98759d743ef36f16248ad15945fe58cdf667f2f6c2582b28c8e773b821"
+          "size": 10423,
+          "sha256": "6094fa5252fb52726c0d45d06c421dfc74b54e92ff8228f1125cec45c5920b69"
         },
         {
           "path": "manifest.json",
           "size": 280,
-          "sha256": "96251f9c33aa1b597f27ab3c3d61a2afed57ce079fa002d23d12168e5ddbae8e"
+          "sha256": "0885b8712907d8610c8f957b1e9c03faf7dced1ea81db36472adb40876cbfc16"
         }
       ]
     }

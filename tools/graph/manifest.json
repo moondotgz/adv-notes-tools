@@ -4,7 +4,7 @@
   "description": "Plot functions or data points (with a best-fit line) and place the graph on your page.",
   "entry": "index.html",
   "icon": "graph",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Adv Notes",
   "category": "Study"
 }
