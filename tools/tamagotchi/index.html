@@ -69,7 +69,7 @@
     <button id="clean"><b>🧼</b>Clean</button>
   </div>
   <div class="row">
-    <button class="ghost" id="talk">Talk to it</button>
+    <button class="ghost" id="talk" data-ai>Talk to it</button>
     <button class="ghost" id="rename">Rename</button>
     <button class="ghost" id="note">Share on page</button>
   </div>
@@ -200,7 +200,7 @@
   };
   $('talk').onclick = async () => {
     const [, msg] = mood();
-    if (!window.AdvNotes || !AdvNotes.ask) return say(msg || tr('{0} chirps happily.', s.name));
+    if (!window.AdvNotes || !AdvNotes.ask || AdvNotes.aiEnabled === false) return say(msg || tr('{0} chirps happily.', s.name));
     say('…');
     try {
       await AdvNotes.ask(`You are a tiny virtual pet named ${s.name}. Your stats out of 100: hunger ${Math.round(s.hunger)} (low = hungry), happiness ${Math.round(s.happy)}, energy ${Math.round(s.energy)}, health ${Math.round(s.health)}. Say one short, cute sentence in character reflecting how you feel. No quotes.` + inLang(), { onText: t => say(t) });

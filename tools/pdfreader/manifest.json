@@ -4,7 +4,7 @@
   "description": "Read PDFs next to your notes: table of contents, bookmarks, search, cite a page, ask AI about a page",
   "entry": "index.html",
   "icon": "book",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Adv Notes",
   "category": "Study"
 }

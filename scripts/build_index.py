@@ -40,7 +40,7 @@ def tool(folder):
             })
     if sum(f["size"] for f in files) > MAX:
         sys.exit(f"tools/{folder}: larger than 200 MB")
-    out = {k: m[k] for k in ("id", "name", "description", "icon", "version", "author", "category", "minApp") if k in m}
+    out = {k: m[k] for k in ("id", "name", "description", "icon", "version", "author", "category", "minApp", "requiresAi") if k in m}
     out["path"] = f"tools/{folder}"
     out["files"] = files
     # translated name/description from i18n/<tag>.json, shown by the app's tool store

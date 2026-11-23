@@ -4,7 +4,8 @@
   "description": "The AI writes a multiple-choice quiz from a topic or your page, marks your answers and remembers your weak topics so you can drill them.",
   "entry": "index.html",
   "icon": "science",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "Adv Notes",
-  "category": "Study"
+  "category": "Study",
+  "requiresAi": true
 }

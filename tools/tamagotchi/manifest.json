@@ -4,7 +4,7 @@
   "description": "A virtual pet that lives next to your notes: feed it, play, clean up and let it sleep. It keeps getting hungry while you're away.",
   "entry": "index.html",
   "icon": "extension",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "Adv Notes",
   "category": "Fun"
 }

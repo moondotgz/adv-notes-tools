@@ -44,20 +44,20 @@
       "name": "EPUB reader",
       "description": "Read EPUB books next to your notes: contents, bookmarks, search, text size and themes, quote a passage, ask AI about a section",
       "icon": "book",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/epubreader",
       "files": [
         {
           "path": "index.html",
-          "size": 36776,
-          "sha256": "a12488de0cd5b84844b519581b0b08e9a75e72c3f361fa0f9c7e3d16161792ea"
+          "size": 36800,
+          "sha256": "59aa72609519ab65ba3b27f71758872fa394e1ca6ab6685b2421c662b208f923"
         },
         {
           "path": "manifest.json",
           "size": 310,
-          "sha256": "3fef1a68e75465a44316590913abdb16952a33c89bfdf157ffb00ef817cd3cca"
+          "sha256": "07fa68fbb8b81e0742f8d983e4749d03e9a8e5bb81f58d26df8422ea56c5b148"
         },
         {
           "path": "i18n/en.json",
@@ -92,20 +92,20 @@
       "name": "Equation balancer",
       "description": "Balances chemical equations exactly (ions too), reads one from your lasso, and finds the limiting reagent and product masses.",
       "icon": "science",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/balancer",
       "files": [
         {
           "path": "index.html",
-          "size": 19313,
-          "sha256": "a10979bb668780b801d245abcc70cae68dbdb3e0bd920d5e25e731e0d8e15ce8"
+          "size": 19321,
+          "sha256": "d7815d8525e22b56a66b8e759f437b8fa9ff5b2f0c2123a038f2d3d09fa0dee0"
         },
         {
           "path": "manifest.json",
           "size": 316,
-          "sha256": "dd9152d7377c5015f72bb568fcd5b41d997bc0ee91ff7fdc2cce9e09b99e8545"
+          "sha256": "ff7dc896a38e77eb4d0b8fa75f122986cb52d2e9d41bd28bee24e1b09a0faa7c"
         },
         {
           "path": "i18n/en.json",
@@ -130,9 +130,10 @@
       "name": "Feynman explainer",
       "description": "Explain a concept in your own words and the AI points out gaps, errors and jargon, then asks a deeper question.",
       "icon": "chat",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "Adv Notes",
       "category": "Study",
+      "requiresAi": true,
       "path": "tools/feynman",
       "files": [
         {
@@ -142,8 +143,8 @@
         },
         {
           "path": "manifest.json",
-          "size": 298,
-          "sha256": "4ff6c4a182b195e1fa59927603f80adac8c746ca062752ab73ab2f2f39c6b1b3"
+          "size": 320,
+          "sha256": "953da306b530af6858db94a372550d37ddd9bee2c6c39f144343f3b411102344"
         },
         {
           "path": "i18n/en.json",
@@ -168,20 +169,20 @@
       "name": "Flashcards",
       "description": "Spaced-repetition flashcards. Add cards by hand or let the AI write them from your page, then review what's due.",
       "icon": "book",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/flashcards",
       "files": [
         {
           "path": "index.html",
-          "size": 12583,
-          "sha256": "9e4e519aa6185f23791e7185d4b0bca936d524aa3f4081a535e823120b5c81b3"
+          "size": 12608,
+          "sha256": "0067da18b00a8ae359035ae6bf7731ddb213f2daa54ee911babd91e640ecdcaf"
         },
         {
           "path": "manifest.json",
           "size": 295,
-          "sha256": "423866a7a2f6e992d74a6397f000e735a4b2f5b9f14eac668d5bc5a903cc47fc"
+          "sha256": "a7af37441407f46f3805d1ad7ed536b77d86f8eb6cc70c53244a3c32bbf132b0"
         },
         {
           "path": "i18n/en.json",
@@ -282,20 +283,20 @@
       "name": "Glossary builder",
       "description": "Collect terms as you study, let the AI define them or find them on your page, then write the glossary onto the page.",
       "icon": "translate",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/glossary",
       "files": [
         {
           "path": "index.html",
-          "size": 10186,
-          "sha256": "684e6ab266f1535a7ee205b29e0498c7005cc9b7c28aab4904b3dfa5128a4cb8"
+          "size": 10202,
+          "sha256": "57703156fa42d5e68dbbfbeaaf91fc158f7d23d4a675c9392c175511f1858a79"
         },
         {
           "path": "manifest.json",
           "size": 308,
-          "sha256": "e9321287532c1b6dc7258e569ad9f35e665986c2b67028405ff64ac0a65033fd"
+          "sha256": "ee213eca5aca2fa9c425dad0613abef45cdd6ad1b03ce7a9d65f4589a2c2cf45"
         },
         {
           "path": "i18n/en.json",
@@ -434,20 +435,20 @@
       "name": "PDF reader",
       "description": "Read PDFs next to your notes: table of contents, bookmarks, search, cite a page, ask AI about a page",
       "icon": "book",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/pdfreader",
       "files": [
         {
           "path": "index.html",
-          "size": 23837,
-          "sha256": "fb0b34ffb58a98adc199bd49194105bc22a5913848d89cfcf183a82234a413ae"
+          "size": 23861,
+          "sha256": "fe00f13bf6f0ce979f9d6bfebf73ff7505697e6d87b319bf928ddb8565fd26b1"
         },
         {
           "path": "manifest.json",
           "size": 282,
-          "sha256": "6acf865aa15c6e0c2202ebab28bade4800f1ac3e15604cdb1e8c20283ece8ab6"
+          "sha256": "8c387acc472eae5532ec467b9a1292dffeb0544fa7f9fada853cba07185d5d2c"
         },
         {
           "path": "i18n/en.json",
@@ -530,9 +531,10 @@
       "name": "Quiz me",
       "description": "The AI writes a multiple-choice quiz from a topic or your page, marks your answers and remembers your weak topics so you can drill them.",
       "icon": "science",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "Adv Notes",
       "category": "Study",
+      "requiresAi": true,
       "path": "tools/quiz",
       "files": [
         {
@@ -542,8 +544,8 @@
         },
         {
           "path": "manifest.json",
-          "size": 313,
-          "sha256": "e5dd707a80a9568975e3a0f98b049e0919d290fa37d2355382700d781b425c9e"
+          "size": 335,
+          "sha256": "7f4e9a702f4388d62f5ec94ee239b67a4ec97717f366776cbac1b01a9e96ae62"
         },
         {
           "path": "i18n/en.json",
@@ -644,20 +646,20 @@
       "name": "Tamagotchi",
       "description": "A virtual pet that lives next to your notes: feed it, play, clean up and let it sleep. It keeps getting hungry while you're away.",
       "icon": "extension",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "Adv Notes",
       "category": "Fun",
       "path": "tools/tamagotchi",
       "files": [
         {
           "path": "index.html",
-          "size": 11836,
-          "sha256": "72b2aeda87cb1c26c5e4ef125b4463a49021fbd80be6f84a536e8c56b5daee9c"
+          "size": 11876,
+          "sha256": "8f032984b462ad81059b60885db4a2ad3e25871358cf020fa99f61a0aeaadce5"
         },
         {
           "path": "manifest.json",
           "size": 315,
-          "sha256": "d65a8a5d031748de0297a4d721e5737766614fe8c3a800acf8053e06995a0583"
+          "sha256": "6e5bcc49a42d11f73e47ee29d102760c11a0029765f3e73f5de2b083d3504858"
         },
         {
           "path": "i18n/en.json",
