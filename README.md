@@ -42,3 +42,15 @@ CI fails if `index.json` doesn't match the tool folders.
 ## Licences
 
 Each tool keeps its own licence. The PDF reader bundles [pdf.js](https://github.com/mozilla/pdf.js) (Apache-2.0; see `tools/pdfreader/pdfjs/LICENSE`).
+
+## Translating tools
+
+Each tool can ship `i18n/<language>.json` next to its `index.html` (e.g. `tools/quiz/i18n/pt-BR.json`). Keys are the
+English text; values are the translation. `_meta` holds the translated `name`/`description` (shown in the app's tool
+list and store) and `"machineTranslated": true` for unreviewed machine translations. Missing strings stay English.
+
+- Static text in the HTML (text, `placeholder`, `title`, `aria-label`) is translated automatically by the app.
+- Text built in JavaScript goes through `tr("Delete {0}?", name)` (a wrapper around `AdvNotes.t`), and
+  data tables can be marked for the extractor with `/* i18n: cols 0,1 */`, `/* i18n: keys */` or `/* i18n: 'A', 'B' */`.
+- `python3 scripts/i18n.py` writes `i18n/en.json` (the template) for every tool; `--check` lists missing strings.
+  To start a language, copy a tool's `en.json` to `<tag>.json` and fill it in.

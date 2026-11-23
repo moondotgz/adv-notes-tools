@@ -68,6 +68,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -86,18 +89,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -124,7 +127,7 @@ function render() {
   $('list').innerHTML = g.filter(x => (x.t + ' ' + x.d).toLowerCase().includes(f)).map(x => `
     <div class="card"><b>${esc(x.t)}</b>
       <div class="muted" contenteditable data-t="${esc(x.t)}" style="margin:4px 0;outline:none">${esc(x.d) || '<i>tap to write a definition</i>'}</div>
-      <div class="row"><button class="ghost fit" data-ai="${esc(x.t)}">AI define</button><button class="ghost fit" data-del="${esc(x.t)}">Delete</button></div></div>`).join('') || '<p class="muted">No terms yet.</p>';
+      <div class="row"><button class="ghost fit" data-ai="${esc(x.t)}">AI define</button><button class="ghost fit" data-del="${esc(x.t)}">Delete</button></div></div>`).join('') || '<p class="muted">' + tr('No terms yet.') + '</p>';
   $('list').querySelectorAll('[contenteditable]').forEach(el => el.onblur = () => {
     const x = g.find(y => y.t === el.dataset.t); const v = el.textContent.trim();
     if (x && v !== 'tap to write a definition') { x.d = v; save(); }
@@ -143,29 +146,29 @@ $('add').onclick = () => { if (add($('term').value)) { $('term').value = ''; sav
 $('term').onkeydown = e => { if (e.key === 'Enter') $('add').click(); };
 
 async function define(terms) {
-  setMsg('Defining…');
+  setMsg(tr('Defining…'));
   try {
-    const t = await ask(`Define each term in one clear sentence suitable for a student's glossary. Terms: ${JSON.stringify(terms)}. Reply with ONLY a JSON array like [{"t":"term","d":"definition"}] using the exact terms given.`);
+    const t = await ask(`Define each term in one clear sentence suitable for a student's glossary. Terms: ${JSON.stringify(terms)}. Reply with ONLY a JSON array like [{"t":"term","d":"definition"}] using the exact terms given. Keep the terms exactly as given.` + inLang());
     const arr = parseJSON(t); let n = 0;
     for (const x of arr) { const e = g.find(y => y.t.toLowerCase() === String(x.t).toLowerCase()); if (e && x.d) { e.d = String(x.d); n++; } }
-    save(); render(); setMsg(`Defined ${n} term${n === 1 ? '' : 's'}.`);
+    save(); render(); setMsg(n === 1 ? tr('Defined 1 term.') : tr('Defined {0} terms.', n));
   } catch (e) { setMsg(e.message); }
 }
 $('define').onclick = async () => {
   const typed = $('term').value.trim();
   if (typed) { add(typed); $('term').value = ''; save(); render(); await define([typed]); }
-  else { const missing = g.filter(x => !x.d).map(x => x.t); missing.length ? await define(missing) : setMsg('Type a term first, or add terms without definitions.'); }
+  else { const missing = g.filter(x => !x.d).map(x => x.t); missing.length ? await define(missing) : setMsg(tr('Type a term first, or add terms without definitions.')); }
 };
 $('scan').onclick = async () => {
-  setMsg('Reading your page…');
+  setMsg(tr('Reading your page…'));
   try {
-    const t = await ask('List the key technical terms worth putting in a study glossary from the attached image (at most 12), each with a one-sentence definition. Reply with ONLY a JSON array like [{"t":"term","d":"definition"}].', { image: 'page' });
+    const t = await ask('List the key technical terms worth putting in a study glossary from the attached image (at most 12), each with a one-sentence definition. Reply with ONLY a JSON array like [{"t":"term","d":"definition"}].' + inLang(), { image: 'page' });
     const arr = parseJSON(t).filter(x => x && x.t); arr.forEach(x => add(String(x.t), String(x.d || '')));
-    save(); render(); setMsg(`Found ${arr.length} terms.`);
+    save(); render(); setMsg(tr('Found {0} terms.', arr.length));
   } catch (e) { setMsg(e.message); }
 };
 $('find').oninput = render;
-$('ins').onclick = () => insert('Glossary\n' + g.map(x => `${x.t}: ${x.d || '—'}`).join('\n'));
+$('ins').onclick = () => insert(tr('Glossary') + '\n' + g.map(x => `${x.t}: ${x.d || '—'}`).join('\n'));
 render();
 
 })();

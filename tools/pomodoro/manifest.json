@@ -4,7 +4,7 @@
   "description": "Pomodoro timer with focus and break cycles, a daily study total and a weekly chart. Write your study time onto the page.",
   "entry": "index.html",
   "icon": "timer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Adv Notes",
   "category": "Study"
 }

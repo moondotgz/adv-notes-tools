@@ -4,7 +4,7 @@
   "description": "Balances chemical equations exactly (ions too), reads one from your lasso, and finds the limiting reagent and product masses.",
   "entry": "index.html",
   "icon": "science",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Adv Notes",
   "category": "Study"
 }

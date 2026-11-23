@@ -4,7 +4,7 @@
   "description": "Collect terms as you study, let the AI define them or find them on your page, then write the glossary onto the page.",
   "entry": "index.html",
   "icon": "translate",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Adv Notes",
   "category": "Study"
 }

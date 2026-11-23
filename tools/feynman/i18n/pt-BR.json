@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "name": "Explicador Feynman",
+    "description": "Explique um conceito com suas palavras e a IA aponta lacunas, erros e jargões, depois faz uma pergunta mais profunda.",
+    "machineTranslated": true
+  },
+  "Feynman explainer": "Explicador Feynman",
+  "Feynman check": "Verificação Feynman",
+  "Explain a concept as if teaching a beginner. The AI looks for gaps, jargon and mistakes.": "Explique um conceito como se ensinasse um iniciante. A IA procura lacunas, jargões e erros.",
+  "Concept (e.g. entropy)": "Conceito (ex.: entropia)",
+  "Explain it in your own words…": "Explique com suas palavras…",
+  "Check my explanation": "Verificar minha explicação",
+  "Use my handwriting on the page instead": "Usar minha letra na página",
+  "Ask a follow-up or revise…": "Faça outra pergunta ou revise…",
+  "Send": "Enviar",
+  "Write feedback on page": "Escrever o retorno na página",
+  "Start over": "Recomeçar",
+  "Written on your page": "Escrito na sua página",
+  "AI is not available here.": "A IA não está disponível aqui.",
+  "The AI did not return structured data. It said: \"{0}\"": "A IA não retornou dados estruturados. Ela disse: \"{0}\""
+}

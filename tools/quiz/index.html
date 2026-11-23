@@ -88,6 +88,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -106,18 +109,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -142,29 +145,29 @@ const saveW = () => db.set('weak', weak);
 function show(id) { ['setup', 'play', 'done'].forEach(x => $(x).classList.toggle('hide', x !== id)); }
 function renderWeak() {
   const w = Object.entries(weak).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
-  $('weak').innerHTML = w.length ? 'Weak spots: ' + w.slice(0, 6).map(([t, n]) => `${esc(t)} (${n})`).join(', ') : 'No weak spots recorded yet.';
+  $('weak').innerHTML = w.length ? tr('Weak spots: {0}', w.slice(0, 6).map(([t, n]) => `${esc(t)} (${n})`).join(', ')) : tr('No weak spots recorded yet.');
   $('drill').disabled = !w.length;
 }
 
 async function build(topic, src, n, level) {
   const what = src ? 'the content of the attached image' + (topic ? ` (focus: ${topic})` : '') : `the topic "${topic}"`;
-  const t = await ask(`Write ${n} ${level.toLowerCase()} multiple-choice questions about ${what}. Each has exactly 4 options and one correct answer. Reply with ONLY a JSON array like [{"q":"...","options":["A","B","C","D"],"answer":0,"topic":"short subtopic","why":"one-sentence explanation"}] where answer is the index of the correct option.`, src ? { image: src } : {});
+  const t = await ask(`Write ${n} ${level.toLowerCase()} multiple-choice questions about ${what}. Each has exactly 4 options and one correct answer. Reply with ONLY a JSON array like [{"q":"...","options":["A","B","C","D"],"answer":0,"topic":"short subtopic","why":"one-sentence explanation"}] where answer is the index of the correct option.` + inLang(), src ? { image: src } : {});
   const arr = parseJSON(t).filter(x => x && x.q && Array.isArray(x.options) && x.options.length >= 2 && Number.isInteger(x.answer) && x.answer >= 0 && x.answer < x.options.length);
-  if (!arr.length) throw new Error('No usable questions came back. Try again.');
+  if (!arr.length) throw new Error(tr('No usable questions came back. Try again.'));
   return arr;
 }
 async function begin(topic, src, n, level) {
-  $('serr').textContent = ''; $('start').disabled = $('drill').disabled = true; $('start').textContent = 'Writing questions…';
+  $('serr').textContent = ''; $('start').disabled = $('drill').disabled = true; $('start').textContent = tr('Writing questions…');
   try {
     qs = await build(topic, src, n, level);
-    topicName = topic || 'your page';
+    topicName = topic || tr('your page');
     i = 0; right = 0; missed = []; show('play'); renderQ();
   } catch (e) { $('serr').textContent = e.message; }
-  $('start').disabled = false; $('start').textContent = 'Start quiz'; renderWeak();
+  $('start').disabled = false; $('start').textContent = tr('Start quiz'); renderWeak();
 }
 $('start').onclick = () => {
   const topic = $('topic').value.trim(), src = $('src').value;
-  if (!topic && !src) { $('serr').textContent = 'Enter a topic or choose page / selection.'; return; }
+  if (!topic && !src) { $('serr').textContent = tr('Enter a topic or choose page / selection.'); return; }
   begin(topic, src, Math.min(15, Math.max(3, +$('n').value || 5)), $('level').value);
 };
 $('drill').onclick = () => {
@@ -174,7 +177,7 @@ $('drill').onclick = () => {
 
 function renderQ() {
   const q = qs[i];
-  $('prog').textContent = `Question ${i + 1} of ${qs.length} · ${right} correct`;
+  $('prog').textContent = tr('Question {0} of {1} · {2} correct', i + 1, qs.length, right);
   $('qtext').textContent = q.q;
   $('fb').classList.add('hide'); $('nextBtn').classList.add('hide');
   $('opts').innerHTML = q.options.map((o, k) => `<div class="row"><button class="ghost" data-k="${k}" style="text-align:left">${esc(o)}</button></div>`).join('');
@@ -190,17 +193,17 @@ function answer(k) {
     else if (+b.dataset.k === k) { b.style.background = 'var(--bad)'; b.style.color = '#fff'; }
   });
   $('fb').classList.remove('hide');
-  $('fb').innerHTML = (ok ? '✅ Correct. ' : '❌ Not quite. ') + esc(q.why || '');
-  $('nextBtn').classList.remove('hide'); $('nextBtn').textContent = i + 1 < qs.length ? 'Next' : 'See results';
+  $('fb').innerHTML = (ok ? '✅ ' + tr('Correct.') + ' ' : '❌ ' + tr('Not quite.') + ' ') + esc(q.why || '');
+  $('nextBtn').classList.remove('hide'); $('nextBtn').textContent = i + 1 < qs.length ? tr('Next') : tr('See results');
 }
 $('nextBtn').onclick = () => { i++; if (i < qs.length) renderQ(); else finish(); };
 function finish() {
   show('done');
   $('score').textContent = `${right} / ${qs.length} (${Math.round(right / qs.length * 100)}%)`;
-  $('review').innerHTML = missed.length ? '<p class="muted">Review these:</p>' + missed.map(q => `<div class="card">${esc(q.q)}<div class="muted">Answer: ${esc(q.options[q.answer])}</div></div>`).join('') : '<p>Perfect score! 🎉</p>';
+  $('review').innerHTML = missed.length ? '<p class="muted">' + tr('Review these:') + '</p>' + missed.map(q => `<div class="card">${esc(q.q)}<div class="muted">${esc(tr('Answer: {0}', q.options[q.answer]))}</div></div>`).join('') : '<p>' + tr('Perfect score! 🎉') + '</p>';
 }
 $('again').onclick = () => { show('setup'); renderWeak(); };
-$('logit').onclick = () => insert(`Quiz on ${topicName}: ${right}/${qs.length}` + (missed.length ? '\nReview: ' + [...new Set(missed.map(q => q.topic || q.q))].join(', ') : ''));
+$('logit').onclick = () => insert(tr('Quiz on {0}: {1}/{2}', topicName, right, qs.length) + (missed.length ? '\n' + tr('Review:') + ' ' + [...new Set(missed.map(q => q.topic || q.q))].join(', ') : ''));
 renderWeak();
 
 })();

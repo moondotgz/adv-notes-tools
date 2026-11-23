@@ -82,6 +82,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -100,18 +103,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -131,8 +134,8 @@ function tabs(ids, onchange) {
 
 // Places a canvas on the page as a picture (app 1.5.0+).
 function placeImage(cv) {
-  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast('Placed on your page — move or resize it with the lasso') : toast('Could not place the picture'); }
-  else toast('Update Adv Notes to 1.5.0 or newer to place pictures on the page');
+  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast(tr('Placed on your page — move or resize it with the lasso')) : toast(tr('Could not place the picture')); }
+  else toast(tr('Update Adv Notes to 1.5.0 or newer to place pictures on the page'));
 }
 // Leitner boxes: after a correct review, the mistake comes back after 1, 3, 7, 14, 30 days.
 const GAPS = [0, 1, 3, 7, 14, 30];
@@ -151,26 +154,26 @@ function shrink(dataUrl) {
 $('cap').onclick = async () => {
   $('aerr').textContent = '';
   const d = A && A.selectionImage ? A.selectionImage() : null;
-  if (!d) { $('aerr').textContent = 'Select something with the lasso first.'; return; }
+  if (!d) { $('aerr').textContent = tr('Select something with the lasso first.'); return; }
   shot = await shrink(d); $('prev').src = shot; $('prev').classList.remove('hide');
 };
 $('save').onclick = () => {
-  const topic = $('topic').value.trim() || 'General', wrong = $('wrong').value.trim(), right = $('right').value.trim();
-  if (!shot && !wrong) { $('aerr').textContent = 'Capture the mistake or describe it.'; return; }
+  const topic = $('topic').value.trim() || tr('General'), wrong = $('wrong').value.trim(), right = $('right').value.trim();
+  if (!shot && !wrong) { $('aerr').textContent = tr('Capture the mistake or describe it.'); return; }
   items.push({ id: Date.now().toString(36), topic, wrong, right, img: shot, box: 0, due: today(), added: today() });
   save(); shot = null; $('prev').classList.add('hide'); $('wrong').value = $('right').value = '';
-  toast('Saved — it will come up in Review'); refresh();
+  toast(tr('Saved — it will come up in Review')); refresh();
 };
 let cur = null, revealed = false;
 function renderReview() {
   const d = due();
-  if (!d.length) { $('rv').innerHTML = `<p class="muted">Nothing due. ${items.length ? 'Next one is due ' + items.map(x => x.due).sort()[0] + '.' : 'Add a mistake first.'}</p>`; return; }
+  if (!d.length) { $('rv').innerHTML = `<p class="muted">${tr('Nothing due.')} ${items.length ? tr('Next one is due {0}.', items.map(x => x.due).sort()[0]) : tr('Add a mistake first.')}</p>`; return; }
   cur = d[0];
-  $('rv').innerHTML = `<div class="card"><span class="pill">${esc(cur.topic)}</span> <span class="muted">${d.length} due</span>
+  $('rv').innerHTML = `<div class="card"><span class="pill">${esc(cur.topic)}</span> <span class="muted">${tr('{0} due', d.length)}</span>
     ${cur.img ? `<img class="shot" src="${cur.img}">` : ''}
     ${cur.wrong ? `<div class="pre">${esc(cur.wrong)}</div>` : ''}
     <p class="muted">What's wrong and what is right? Think, then reveal.</p>
-    <div id="ans" class="${revealed ? '' : 'hide'}"><div class="pre" style="font-size:17px">${esc(cur.right || '(no answer saved)')}</div></div>
+    <div id="ans" class="${revealed ? '' : 'hide'}"><div class="pre" style="font-size:17px">${esc(cur.right || tr('(no answer saved)'))}</div></div>
     <div class="row">${revealed ? '<button id="again" class="ghost">Got it wrong again</button><button id="ok">I knew it</button>' : '<button id="rev">Reveal</button>'}</div></div>`;
   if (!revealed) $('rev').onclick = () => { revealed = true; renderReview(); };
   else {
@@ -185,12 +188,12 @@ function renderList() {
   $('ftopic').innerHTML = '<option value="">All topics</option>' + topics.map(t => `<option ${t === f ? 'selected' : ''}>${esc(t)}</option>`).join('');
   $('topics').innerHTML = topics.map(t => `<option value="${esc(t)}">`).join('');
   const shown = items.filter(x => !f || x.topic === f).slice().reverse();
-  $('items').innerHTML = shown.map(x => `<div class="card"><span class="pill">${esc(x.topic)}</span> <span class="muted">due ${x.due}</span>
+  $('items').innerHTML = shown.map(x => `<div class="card"><span class="pill">${esc(x.topic)}</span> <span class="muted">${tr('due {0}', x.due)}</span>
     ${x.img ? `<img class="shot" src="${x.img}">` : ''}${x.wrong ? `<div class="pre muted">${esc(x.wrong)}</div>` : ''}
     <div class="pre" style="margin-top:4px">✔ ${esc(x.right || '—')}</div>
-    <div class="row"><button class="ghost" data-w="${x.id}">Write answer on page</button><button class="ghost fit" data-d="${x.id}">Delete</button></div></div>`).join('') || '<p class="muted">No mistakes saved yet.</p>';
+    <div class="row"><button class="ghost" data-w="${x.id}">Write answer on page</button><button class="ghost fit" data-d="${x.id}">Delete</button></div></div>`).join('') || '<p class="muted">' + tr('No mistakes saved yet.') + '</p>';
   $('items').querySelectorAll('[data-w]').forEach(b => b.onclick = () => { const x = items.find(i => i.id === b.dataset.w); insert(`${x.topic}: ${x.right || x.wrong}`); });
-  $('items').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { if (confirm('Delete this mistake?')) { items = items.filter(i => i.id !== b.dataset.d); save(); refresh(); } });
+  $('items').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { if (confirm(tr('Delete this mistake?'))) { items = items.filter(i => i.id !== b.dataset.d); save(); refresh(); } });
 }
 function refresh() { const n = due().length; $('due').textContent = n ? '(' + n + ')' : ''; renderReview(); renderList(); }
 $('ftopic').onchange = renderList;

@@ -142,6 +142,8 @@
 window.__epubReaderStarted = true;
 const A = window.AdvNotes;
 const $ = (id) => document.getElementById(id);
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function fit() { $('app').style.height = window.innerHeight + 'px'; }
@@ -205,10 +207,10 @@ async function parseBook(buf, fileName) {
   const book = { zip, lower, blobs: new Map(), spine: [], toc: [], title: fileName.replace(/\.epub$/i, ''), pathIndex: new Map() };
 
   const container = await zipText(book, 'META-INF/container.xml');
-  if (!container) throw new Error('This file is not a valid EPUB (no META-INF/container.xml).');
+  if (!container) throw new Error(tr('This file is not a valid EPUB (no META-INF/container.xml).'));
   const rootfile = byLocal(xml(container), 'rootfile')[0];
   const opfPath = rootfile && rootfile.getAttribute('full-path');
-  if (!opfPath) throw new Error('This EPUB has no package file.');
+  if (!opfPath) throw new Error(tr('This EPUB has no package file.'));
   const opf = xml(await zipText(book, opfPath));
   const titleEl = byLocal(opf, 'title')[0];
   if (titleEl && titleEl.textContent.trim()) book.title = titleEl.textContent.trim();
@@ -226,7 +228,7 @@ async function parseBook(buf, fileName) {
     book.pathIndex.set(path, book.spine.length);
     book.spine.push({ path, weight, len: 0, text: null });
   }
-  if (!book.spine.length) throw new Error('This EPUB has no readable chapters.');
+  if (!book.spine.length) throw new Error(tr('This EPUB has no readable chapters.'));
 
   // table of contents: EPUB 3 nav document, else the NCX
   const navItem = Array.from(manifest.values()).find((m) => /\bnav\b/.test(m.props));
@@ -331,7 +333,7 @@ async function showChapter(i, opts = {}) {
   const ch = book.spine[i];
   const raw = await zipText(book, ch.path);
   if (token !== state.loadToken2) return;
-  if (raw == null) { toast('Missing chapter in this EPUB'); return; }
+  if (raw == null) { toast(tr('Missing chapter in this EPUB')); return; }
   const src = xml(raw);
   src.querySelectorAll('script, iframe, object, embed').forEach((e) => e.remove());
 
@@ -391,7 +393,7 @@ async function showChapter(i, opts = {}) {
     if (!a) return;
     e.preventDefault();
     const href = a.getAttribute('href') || '';
-    if (/^(https?:|mailto:|tel:)/i.test(href)) { toast('External links are disabled'); return; }
+    if (/^(https?:|mailto:|tel:)/i.test(href)) { toast(tr('External links are disabled')); return; }
     if (href.startsWith('#')) { scrollToFrag(idoc, href.slice(1)); return; }
     const p = resolve(ch.path, href);
     const idx = book.pathIndex.get(p);
@@ -453,7 +455,7 @@ $('next').onclick = () => showChapter(state.cur + 1);
 async function showHome() {
   state.book = null; state.file = null; state.loadToken++; state.loadToken2++;
   $('reader').classList.add('hidden'); $('home').classList.remove('hidden');
-  $('title').textContent = 'EPUB reader'; $('pct').textContent = '';
+  $('title').textContent = tr('EPUB reader'); $('pct').textContent = '';
   $('side').classList.remove('open');
   const files = (await A.files()).filter((f) => /\.epub$/i.test(f.name));
   const docs = store.docs();
@@ -469,7 +471,7 @@ async function showHome() {
   $('btnOpen').onclick = pick;
   $('home').querySelectorAll('button.open').forEach((b) => b.onclick = () => openFile(files.find((f) => f.name === b.dataset.name)));
   $('home').querySelectorAll('button.del').forEach((b) => b.onclick = async () => {
-    if (!confirm(`Remove “${b.dataset.name}” from the reader?`)) return;
+    if (!confirm(tr('Remove “{0}” from the reader?', b.dataset.name))) return;
     await A.deleteFile(b.dataset.name); store.forget(b.dataset.name); showHome();
   });
 }
@@ -480,9 +482,9 @@ async function pick() {
 
 async function openFile(f) {
   try {
-    toast('Opening…');
+    toast(tr('Opening…'));
     const resp = await fetch(f.url);
-    if (!resp.ok) throw new Error('Could not read the file (' + resp.status + ')');
+    if (!resp.ok) throw new Error(tr('Could not read the file ({0})', resp.status));
     const book = await parseBook(await resp.arrayBuffer(), f.name);
     state.book = book; state.file = f; state.indexed = false;
     const token = ++state.loadToken;
@@ -494,7 +496,7 @@ async function openFile(f) {
     await showChapter(saved.idx || 0, { frac: saved.frac || 0 });
     indexBook(book, token);
   } catch (e) {
-    toast('Couldn’t open: ' + e.message);
+    toast(tr('Couldn’t open: {0}', e.message));
     showHome();
   }
 }
@@ -535,7 +537,7 @@ function renderSide() {
   } else {
     list.innerHTML = state.hits.length
       ? state.hits.map((h, i) => `<button class="item" data-i="${i}"><span class="p">${h.idx + 1}</span><span class="ctx">${h.ctx}</span></button>`).join('')
-      : `<div class="empty">${$('q').value ? (state.indexed ? 'No matches.' : 'Indexing the book…') : 'Type to search the whole book.'}</div>`;
+      : `<div class="empty">${$('q').value ? (state.indexed ? tr('No matches.') : tr('Indexing the book…')) : tr('Type to search the whole book.')}</div>`;
     list.querySelectorAll('.item').forEach((el) => el.onclick = () => {
       const h = state.hits[+el.dataset.i];
       showChapter(h.idx, { find: { q: $('q').value.trim(), nth: h.nth } }); closeSideIfNarrow();
@@ -576,11 +578,11 @@ $('btnBookmark').onclick = () => {
   if (!state.book) return;
   const d = store.doc(state.file.name);
   const near = nearBookmark();
-  if (near) { d.bookmarks = d.bookmarks.filter((m) => m !== near && !(m.idx === near.idx && m.frac === near.frac)); toast('Bookmark removed'); }
+  if (near) { d.bookmarks = d.bookmarks.filter((m) => m !== near && !(m.idx === near.idx && m.frac === near.frac)); toast(tr('Bookmark removed')); }
   else {
     const pct = overall();
-    d.bookmarks.push({ idx: state.cur, frac: state.frac, pct, label: (labelFor(state.cur) || `Chapter ${state.cur + 1}`) + ' · ' + Math.round(pct * 100) + '%' });
-    toast('Bookmarked');
+    d.bookmarks.push({ idx: state.cur, frac: state.frac, pct, label: (labelFor(state.cur) || tr('Chapter {0}', state.cur + 1)) + ' · ' + Math.round(pct * 100) + '%' });
+    toast(tr('Bookmarked'));
   }
   store.saveDoc(state.file.name, { bookmarks: d.bookmarks });
   updateBookmarkBtn(); if (state.tab === 'bookmarks') renderSide();
@@ -614,18 +616,18 @@ function sectionText() {
 let lastAi = '';
 async function askAbout(question) {
   const text = sectionText();
-  if (!text) { toast('Nothing to read here yet'); return; }
-  $('ai').style.display = 'block'; $('aiText').textContent = 'Thinking…';
+  if (!text) { toast(tr('Nothing to read here yet')); return; }
+  $('ai').style.display = 'block'; $('aiText').textContent = tr('Thinking…');
   try {
     lastAi = await A.ask(`${question}\n\n---\nText from "${state.book.title}"${labelFor(state.cur) ? ` (${labelFor(state.cur)})` : ''}:\n${text}`, {
-      system: 'You help a student read a book next to their notes. Answer in plain text (no Markdown, no LaTeX); use Unicode for math.',
+      system: 'You help a student read a book next to their notes. Answer in plain text (no Markdown, no LaTeX); use Unicode for math.' + inLang(),
       onText: (t) => { $('aiText').textContent = t; },
     });
     $('aiText').textContent = lastAi;
   } catch (e) { $('aiText').textContent = e.message; }
 }
 $('aiClose').onclick = () => { $('ai').style.display = 'none'; };
-$('aiInsert').onclick = () => { if (lastAi) { A.insertText(lastAi); toast('Added to your notes'); } };
+$('aiInsert').onclick = () => { if (lastAi) { A.insertText(lastAi); toast(tr('Added to your notes')); } };
 
 $('btnMore').onclick = (e) => {
   e.stopPropagation();
@@ -639,17 +641,17 @@ $('menu').querySelectorAll('button').forEach((b) => b.onclick = async () => {
   switch (b.dataset.act) {
     case 'cite':
       A.insertText(`→ ${state.book.title}${section ? `, ${section}` : ''} (${Math.round(overall() * 100)}%)`);
-      toast('Citation added to your notes'); break;
+      toast(tr('Citation added to your notes')); break;
     case 'quote': {
       const idoc = $('frame').contentDocument;
       const sel = idoc && idoc.getSelection ? idoc.getSelection().toString().replace(/\s+/g, ' ').trim() : '';
-      if (!sel) { toast('Select some text in the book first'); break; }
+      if (!sel) { toast(tr('Select some text in the book first')); break; }
       A.insertText(`“${sel}” — ${state.book.title}${section ? `, ${section}` : ''}`);
-      toast('Quote added to your notes'); break;
+      toast(tr('Quote added to your notes')); break;
     }
-    case 'summary': askAbout('Summarise this passage in a few short bullet points (use "•").'); break;
-    case 'explain': askAbout('Explain this passage step by step, as if to a student seeing it for the first time.'); break;
-    case 'ask': { const q = prompt('Your question about this passage'); if (q) askAbout(q); break; }
+    case 'summary': askAbout('Summarise this passage in a few short bullet points (use "•").' + inLang()); break;
+    case 'explain': askAbout('Explain this passage step by step, as if to a student seeing it for the first time.' + inLang()); break;
+    case 'ask': { const q = prompt(tr('Your question about this passage')); if (q) askAbout(q); break; }
     case 'open': pick(); break;
   }
 });

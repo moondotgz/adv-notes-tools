@@ -4,7 +4,7 @@
   "description": "Capture mistakes with the lasso, note the right answer, and review them on a spaced schedule until they stick.",
   "entry": "index.html",
   "icon": "book",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Adv Notes",
   "category": "Study"
 }

@@ -124,6 +124,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('./pdfjs/pdf.worker.min.js', im
 
 const A = window.AdvNotes;   // injected by the app; see docs/TOOLS.md
 const $ = (id) => document.getElementById(id);
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const state = { doc: null, file: null, zoom: 1, pages: [], current: 1, outline: [], tab: 'toc', hits: [], searchToken: 0 };
 
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1800); }
@@ -139,7 +141,7 @@ const store = {
 async function showHome() {
   state.doc = null; state.file = null;
   $('pages').classList.add('hidden'); $('home').classList.remove('hidden');
-  $('title').textContent = 'PDF reader'; $('pg').textContent = '';
+  $('title').textContent = tr('PDF reader'); $('pg').textContent = '';
   $('side').classList.remove('open');
   const files = (await A.files()).filter((f) => /\.pdf$/i.test(f.name));
   const docs = store.docs();
@@ -156,7 +158,7 @@ async function showHome() {
   $('btnOpen').onclick = pick;
   $('home').querySelectorAll('button.open').forEach((b) => b.onclick = () => openFile(files.find((f) => f.name === b.dataset.name)));
   $('home').querySelectorAll('button.del').forEach((b) => b.onclick = async () => {
-    if (!confirm(`Remove “${b.dataset.name}” from the reader?`)) return;
+    if (!confirm(tr('Remove “{0}” from the reader?', b.dataset.name))) return;
     await A.deleteFile(b.dataset.name); store.forget(b.dataset.name); showHome();
   });
 }
@@ -185,7 +187,7 @@ async function openFile(f) {
     state.tab = state.outline.length ? 'toc' : 'bookmarks';
     renderSide();
   } catch (e) {
-    toast('Couldn’t open: ' + e.message);
+    toast(tr('Couldn’t open: {0}', e.message));
     showHome();
   }
 }
@@ -301,7 +303,7 @@ function renderSide() {
     list.querySelectorAll('.open').forEach((b) => b.onclick = () => goTo(+b.dataset.p));
     list.querySelectorAll('.rename').forEach((b) => b.onclick = () => {
       const all = store.doc(state.file.name).bookmarks.sort((a, c) => a.page - c.page);
-      const label = prompt('Bookmark name', all[+b.dataset.i].label);
+      const label = prompt(tr('Bookmark name'), all[+b.dataset.i].label);
       if (label) { all[+b.dataset.i].label = label; store.saveDoc(state.file.name, { bookmarks: all }); renderSide(); }
     });
     list.querySelectorAll('.del').forEach((b) => b.onclick = () => {
@@ -311,7 +313,7 @@ function renderSide() {
   } else {
     list.innerHTML = state.hits.length
       ? state.hits.map((h, i) => `<button class="item" data-i="${i}"><span class="p">p. ${h.page}</span><span class="ctx">${h.ctx}</span></button>`).join('')
-      : `<div class="empty">${$('q').value ? 'No matches.' : 'Type to search the whole document.'}</div>`;
+      : `<div class="empty">${$('q').value ? tr('No matches.') : tr('Type to search the whole document.')}</div>`;
     list.querySelectorAll('.item').forEach((b) => b.onclick = () => goTo(state.hits[+b.dataset.i].page));
   }
 }
@@ -377,10 +379,10 @@ $('btnBookmark').onclick = async () => {
   if (!state.doc) return;
   const d = store.doc(state.file.name);
   const i = d.bookmarks.findIndex((b) => b.page === state.current);
-  if (i >= 0) { d.bookmarks.splice(i, 1); toast('Bookmark removed'); }
+  if (i >= 0) { d.bookmarks.splice(i, 1); toast(tr('Bookmark removed')); }
   else {
-    const label = (await sectionFor(state.current)) || `Page ${state.current}`;
-    d.bookmarks.push({ page: state.current, label }); toast('Bookmarked page ' + state.current);
+    const label = (await sectionFor(state.current)) || tr('Page {0}', state.current);
+    d.bookmarks.push({ page: state.current, label }); toast(tr('Bookmarked page {0}', state.current));
   }
   store.saveDoc(state.file.name, { bookmarks: d.bookmarks });
   refreshBookmarkMarks();
@@ -395,19 +397,19 @@ function pageImage(n) {
 let lastAi = '';
 async function askAboutPage(question) {
   const img = pageImage(state.current);
-  if (!img) { toast('Page is still rendering'); return; }
-  $('ai').style.display = 'block'; $('aiText').textContent = 'Thinking…';
+  if (!img) { toast(tr('Page is still rendering')); return; }
+  $('ai').style.display = 'block'; $('aiText').textContent = tr('Thinking…');
   try {
     lastAi = await A.ask(question, {
       image: img,
-      system: 'You help a student read a textbook page next to their notes. Answer in plain text (no Markdown, no LaTeX); use Unicode for math.',
+      system: 'You help a student read a textbook page next to their notes. Answer in plain text (no Markdown, no LaTeX); use Unicode for math.' + inLang(),
       onText: (t) => { $('aiText').textContent = t; }
     });
     $('aiText').textContent = lastAi;
   } catch (e) { $('aiText').textContent = e.message; }
 }
 $('aiClose').onclick = () => { $('ai').style.display = 'none'; };
-$('aiInsert').onclick = () => { if (lastAi) { A.insertText(lastAi); toast('Added to your notes'); } };
+$('aiInsert').onclick = () => { if (lastAi) { A.insertText(lastAi); toast(tr('Added to your notes')); } };
 
 $('btnMore').onclick = (e) => {
   e.stopPropagation();
@@ -421,11 +423,11 @@ $('menu').querySelectorAll('button').forEach((b) => b.onclick = async () => {
   switch (b.dataset.act) {
     case 'cite':
       A.insertText(`→ ${$('title').textContent}, p. ${state.current}${section ? ` (${section})` : ''}`);
-      toast('Citation added to your notes'); break;
-    case 'summary': askAboutPage('Summarise this page in a few short bullet points (use "•").'); break;
-    case 'explain': askAboutPage('Explain the content of this page step by step, as if to a student seeing it for the first time.'); break;
-    case 'ask': { const q = prompt('Your question about this page'); if (q) askAboutPage(q); break; }
-    case 'goto': { const n = prompt(`Go to page (1–${state.doc.numPages})`, String(state.current)); if (n) goTo(parseInt(n, 10)); break; }
+      toast(tr('Citation added to your notes')); break;
+    case 'summary': askAboutPage('Summarise this page in a few short bullet points (use "•").' + inLang()); break;
+    case 'explain': askAboutPage('Explain the content of this page step by step, as if to a student seeing it for the first time.' + inLang()); break;
+    case 'ask': { const q = prompt(tr('Your question about this page')); if (q) askAboutPage(q); break; }
+    case 'goto': { const n = prompt(tr('Go to page (1–{0})', state.doc.numPages), String(state.current)); if (n) goTo(parseInt(n, 10)); break; }
     case 'open': pick(); break;
   }
 });

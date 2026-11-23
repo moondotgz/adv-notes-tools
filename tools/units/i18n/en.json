@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "name": "Unit converter",
+    "description": "Converts length, mass, volume, pressure, energy, temperature, amount, concentration and more."
+  },
+  "Unit converter": "",
+  "Swap": "",
+  "Write on page": "",
+  "Written on your page": "",
+  "AI is not available here.": "",
+  "The AI did not return structured data. It said: \"{0}\"": "",
+  "Placed on your page — move or resize it with the lasso": "",
+  "Could not place the picture": "",
+  "Update Adv Notes to 1.5.0 or newer to place pictures on the page": "",
+  "{0} {1} is": "",
+  "Length": "",
+  "Mass": "",
+  "Volume": "",
+  "Pressure": "",
+  "Energy": "",
+  "Temperature": "",
+  "Amount": "",
+  "Concentration": "",
+  "Time": "",
+  "Speed": "",
+  "Area": ""
+}

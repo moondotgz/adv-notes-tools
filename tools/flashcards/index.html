@@ -95,6 +95,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -113,18 +116,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -153,16 +156,16 @@ function next() {
 }
 function renderReview() {
   const d = due(), fresh = cards.filter(c => !c.reps).length;
-  $('counts').textContent = `${d.length} due · ${cards.length} total · ${fresh} new`;
-  if (!cards.length) { $('face').textContent = 'No cards yet. Add some in the Add tab.'; }
-  else if (!cur) { $('face').textContent = '🎉 All caught up!'; }
+  $('counts').textContent = tr('{0} due · {1} total · {2} new', d.length, cards.length, fresh);
+  if (!cards.length) { $('face').textContent = tr('No cards yet. Add some in the Add tab.'); }
+  else if (!cur) { $('face').textContent = '🎉 ' + tr('All caught up!'); }
   else { $('face').textContent = shown ? cur.a : cur.q; $('face').style.color = shown ? 'var(--accent)' : 'var(--fg)'; }
   $('showrow').classList.toggle('hide', !cur || shown);
   $('grades').classList.toggle('hide', !cur || !shown);
   if (cur && shown) {
     const labels = [0,1,2,3].map(g => fmt(schedule(cur, g).interval));
     document.querySelectorAll('#grades button').forEach((b, i) => b.title = labels[i]);
-    document.querySelectorAll('#grades button').forEach((b, i) => b.textContent = ['Again','Hard','Good','Easy'][i] + ' · ' + labels[i]);
+    document.querySelectorAll('#grades button').forEach((b, i) => b.textContent = tr(['Again','Hard','Good','Easy'][i]) + ' · ' + labels[i]);
   }
 }
 const fmt = d => d < 1 ? '10m' : d < 30 ? Math.round(d) + 'd' : d < 365 ? Math.round(d / 30) + 'mo' : (d / 365).toFixed(1) + 'y';
@@ -190,17 +193,17 @@ function addCard(q, a) { cards.push({ id: Date.now() + Math.random(), q, a, ease
 $('addBtn').onclick = () => {
   const q = $('q').value.trim(), a = $('a').value.trim();
   if (!q || !a) return;
-  addCard(q, a); save(); $('q').value = $('a').value = ''; $('q').focus(); toast('Card added');
+  addCard(q, a); save(); $('q').value = $('a').value = ''; $('q').focus(); toast(tr('Card added'));
 };
 $('gen').onclick = async () => {
-  const btn = $('gen'), out = $('genout'); btn.disabled = true; out.className = 'muted'; out.textContent = 'Reading and thinking…';
+  const btn = $('gen'), out = $('genout'); btn.disabled = true; out.className = 'muted'; out.textContent = tr('Reading and thinking…');
   try {
     const n = Math.min(20, Math.max(1, +$('n').value || 8));
-    const t = await ask(`Create up to ${n} concise study flashcards from the content of this image. Cover the key facts and concepts only. Reply with ONLY a JSON array like [{"q":"question","a":"short answer"}].`, { image: $('src').value });
+    const t = await ask(`Create up to ${n} concise study flashcards from the content of this image. Cover the key facts and concepts only. Reply with ONLY a JSON array like [{"q":"question","a":"short answer"}].` + inLang(), { image: $('src').value });
     const arr = parseJSON(t).filter(x => x && x.q && x.a);
-    if (!arr.length) throw new Error('No cards were generated.');
+    if (!arr.length) throw new Error(tr('No cards were generated.'));
     arr.forEach(x => addCard(String(x.q), String(x.a))); save();
-    out.textContent = `Added ${arr.length} cards.`;
+    out.textContent = tr('Added {0} cards.', arr.length);
   } catch (e) { out.className = 'err'; out.textContent = e.message; }
   btn.disabled = false;
 };
@@ -209,12 +212,12 @@ function renderList() {
   const f = $('find').value.toLowerCase();
   $('cards').innerHTML = cards.filter(c => (c.q + c.a).toLowerCase().includes(f)).map(c =>
     `<div class="card"><div>${esc(c.q)}</div><div class="muted">${esc(c.a)}</div>
-     <div class="row"><span class="muted">${c.reps ? 'next in ' + fmt(Math.max(0, (c.due - Date.now()) / DAY)) : 'new'}</span>
-     <button class="ghost fit" data-del="${c.id}">Delete</button></div></div>`).join('') || '<p class="muted">Nothing here.</p>';
+     <div class="row"><span class="muted">${c.reps ? tr('next in {0}', fmt(Math.max(0, (c.due - Date.now()) / DAY))) : tr('new')}</span>
+     <button class="ghost fit" data-del="${c.id}">Delete</button></div></div>`).join('') || '<p class="muted">' + tr('Nothing here.') + '</p>';
   $('cards').querySelectorAll('[data-del]').forEach(b => b.onclick = () => { cards = cards.filter(c => String(c.id) !== b.dataset.del); save(); renderList(); });
 }
 $('find').oninput = renderList;
-$('reset').onclick = () => { if (confirm('Make every card new again?')) { cards.forEach(c => Object.assign(c, { ease: 2.5, reps: 0, interval: 0, due: 0 })); save(); renderList(); } };
+$('reset').onclick = () => { if (confirm(tr('Make every card new again?'))) { cards.forEach(c => Object.assign(c, { ease: 2.5, reps: 0, interval: 0, due: 0 })); save(); renderList(); } };
 
 tabs(['review', 'add', 'list'], t => { if (t === 'review') next(); if (t === 'list') renderList(); });
 

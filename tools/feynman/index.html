@@ -72,6 +72,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -90,18 +93,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -119,7 +122,7 @@ function tabs(ids, onchange) {
   bs[0].click();
 }
 
-const SYS = "You are a Feynman-technique tutor. The student explains a concept in their own words. Respond in this order, tersely: 1) 'Solid:' what they got right. 2) 'Gaps:' what's missing or unclear. 3) 'Errors:' anything incorrect, with the correction (say 'none' if none). 4) 'Jargon:' terms used without explanation. 5) 'Try this:' one specific question to make them think deeper. Be encouraging but honest.";
+const SYS = "You are a Feynman-technique tutor. The student explains a concept in their own words. Respond in this order, tersely: 1) 'Solid:' what they got right. 2) 'Gaps:' what's missing or unclear. 3) 'Errors:' anything incorrect, with the correction (say 'none' if none). 4) 'Jargon:' terms used without explanation. 5) 'Try this:' one specific question to make them think deeper. Be encouraging but honest." + inLang() + " Keep the section labels translated too.";
 let hist = [], last = '';
 const busy = b => { $('go').disabled = $('send').disabled = $('fromPage').disabled = b; };
 
@@ -144,7 +147,7 @@ $('fromPage').onclick = () => {
 };
 $('send').onclick = () => { const v = $('fu').value.trim(); if (!v) return; $('fu').value = ''; turn(v); };
 $('fu').onkeydown = e => { if (e.key === 'Enter') $('send').click(); };
-$('ins').onclick = () => insert('Feynman check' + ($('concept').value.trim() ? ' – ' + $('concept').value.trim() : '') + ':\n' + last);
+$('ins').onclick = () => insert(tr('Feynman check') + ($('concept').value.trim() ? ' – ' + $('concept').value.trim() : '') + ':\n' + last);
 $('clr').onclick = () => { hist = []; last = ''; $('out').classList.add('hide'); $('followrow').classList.add('hide'); $('text').value = ''; };
 
 })();

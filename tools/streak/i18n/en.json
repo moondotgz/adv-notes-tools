@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "name": "Study streak",
+    "description": "Check in each day you study and watch your streak and a calendar heatmap grow."
+  },
+  "Study streak": "",
+  "day streak 🔥": "",
+  "best streak": "",
+  "days studied": "",
+  "Minutes (optional)": "",
+  "I studied today": "",
+  "Write streak on page": "",
+  "Written on your page": "",
+  "AI is not available here.": "",
+  "The AI did not return structured data. Try again.": "",
+  "Update today": "",
+  "Today is logged ({0} min). Nice work!": "",
+  "Today is logged. Nice work!": "",
+  "Keep your {0}-day streak alive!": "",
+  "Start a streak today.": "",
+  "Study streak: {0} days 🔥 (best {1}, {2} days total)": ""
+}

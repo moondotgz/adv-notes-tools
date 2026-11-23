@@ -70,6 +70,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -88,18 +91,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -119,11 +122,11 @@ function tabs(ids, onchange) {
 
 // Places a canvas on the page as a picture (app 1.5.0+).
 function placeImage(cv) {
-  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast('Placed on your page — move or resize it with the lasso') : toast('Could not place the picture'); }
-  else toast('Update Adv Notes to 1.5.0 or newer to place pictures on the page');
+  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast(tr('Placed on your page — move or resize it with the lasso')) : toast(tr('Could not place the picture')); }
+  else toast(tr('Update Adv Notes to 1.5.0 or newer to place pictures on the page'));
 }
 // Each unit: [name, factor to the base unit]. Temperature is handled separately.
-const U = {
+const U = /* i18n: keys */ {
   Length: [['m',1],['km',1e3],['cm',1e-2],['mm',1e-3],['µm',1e-6],['nm',1e-9],['pm',1e-12],['Å',1e-10],['in',0.0254],['ft',0.3048],['yd',0.9144],['mi',1609.344]],
   Mass: [['kg',1],['g',1e-3],['mg',1e-6],['µg',1e-9],['t',1e3],['u (Da)',1.66053906660e-27],['lb',0.45359237],['oz',0.028349523125]],
   Volume: [['L (dm³)',1],['mL (cm³)',1e-3],['µL',1e-6],['m³',1e3],['gal (US)',3.785411784],['qt (US)',0.946352946],['fl oz (US)',0.0295735295625]],
@@ -147,7 +150,7 @@ function conv(v, from, to) {
   return v * f / t;
 }
 function renderCats() {
-  $('cats').innerHTML = Object.keys(U).map(c => `<button class="${c === cat ? '' : 'ghost'} fit" data-c="${c}" style="padding:6px 12px;font-size:14px">${c}</button>`).join('');
+  $('cats').innerHTML = Object.keys(U).map(c => `<button class="${c === cat ? '' : 'ghost'} fit" data-c="${c}" style="padding:6px 12px;font-size:14px">${esc(tr(c))}</button>`).join('');
   $('cats').querySelectorAll('button').forEach(b => b.onclick = () => { cat = b.dataset.c; db.set('cat', cat); setup(); });
 }
 function setup() {
@@ -164,7 +167,7 @@ function update(from) {
   if (from === 'a') $('b').value = show(conv(num($('a').value), $('ua').value, $('ub').value));
   else $('a').value = show(conv(num($('b').value), $('ub').value, $('ua').value));
   const v = num($('a').value), u = $('ua').value;
-  $('all').innerHTML = isFinite(v) ? `<div class="muted">${esc($('a').value)} ${esc(u)} is</div>` + U[cat].filter(x => x[0] !== u).map(x => `<div>${show(conv(v, u, x[0]))} ${esc(x[0])}</div>`).join('') : '';
+  $('all').innerHTML = isFinite(v) ? `<div class="muted">${esc(tr('{0} {1} is', $('a').value, u))}</div>` + U[cat].filter(x => x[0] !== u).map(x => `<div>${show(conv(v, u, x[0]))} ${esc(x[0])}</div>`).join('') : '';
 }
 $('a').oninput = () => update('a'); $('b').oninput = () => update('b');
 $('ua').onchange = () => update('a'); $('ub').onchange = () => update('a');

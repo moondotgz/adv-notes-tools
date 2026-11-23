@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "name": "Feynman explainer",
+    "description": "Explain a concept in your own words and the AI points out gaps, errors and jargon, then asks a deeper question."
+  },
+  "Feynman explainer": "",
+  "Feynman check": "",
+  "Explain a concept as if teaching a beginner. The AI looks for gaps, jargon and mistakes.": "",
+  "Concept (e.g. entropy)": "",
+  "Explain it in your own words…": "",
+  "Check my explanation": "",
+  "Use my handwriting on the page instead": "",
+  "Ask a follow-up or revise…": "",
+  "Send": "",
+  "Write feedback on page": "",
+  "Start over": "",
+  "Written on your page": "",
+  "AI is not available here.": "",
+  "The AI did not return structured data. It said: \"{0}\"": ""
+}

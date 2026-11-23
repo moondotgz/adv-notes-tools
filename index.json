@@ -6,42 +6,68 @@
       "name": "Constants",
       "description": "Physical, chemical, maths and astronomy constants with units. Search, copy, add your own and write any of them onto the page.",
       "icon": "science",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/constants",
       "files": [
         {
           "path": "index.html",
-          "size": 12791,
-          "sha256": "fa47e66724f9eb853e5c5793942bdc4edbf51d5f4f73acd0642916f634791925"
+          "size": 13313,
+          "sha256": "9f7bbffba48abcde1894b9e5c3bb6f0fa7d9f31fb9afd74b19d201fdbd995a17"
         },
         {
           "path": "manifest.json",
           "size": 309,
-          "sha256": "42ea7d3c6c66a254b059e8de7d4afadd0fb5ee62261d1988574371fb2ee9e94d"
+          "sha256": "56b00803915a6d5907809becbdedf57b5eeebc66d13770aa67eff82c126fa4ab"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 2229,
+          "sha256": "da536b8f7eb3d59108115c7d0f4e27e5cac75080e109410b8fede811330db3f4"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 3770,
+          "sha256": "52fd0738d6f68871343bf3b1921e142b0de1358b4ee6018ab2e7a00722ce6f46"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Constantes",
+          "description": "Constantes físicas, químicas, matemáticas e astronômicas com unidades. Busque, copie, adicione as suas e escreva qualquer uma na página."
+        }
+      }
     },
     {
       "id": "epubreader",
       "name": "EPUB reader",
       "description": "Read EPUB books next to your notes: contents, bookmarks, search, text size and themes, quote a passage, ask AI about a section",
       "icon": "book",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/epubreader",
       "files": [
         {
           "path": "index.html",
-          "size": 36247,
-          "sha256": "fc0776a55836d73010a912c4a749743863a774b6a4f0009618c60cc2a5a9968c"
+          "size": 36776,
+          "sha256": "a12488de0cd5b84844b519581b0b08e9a75e72c3f361fa0f9c7e3d16161792ea"
         },
         {
           "path": "manifest.json",
           "size": 310,
-          "sha256": "0254a76aa0e0e5696bb627f41ff9255974d3091f77b1b0173b23c55f2ff5b415"
+          "sha256": "3fef1a68e75465a44316590913abdb16952a33c89bfdf157ffb00ef817cd3cca"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 2079,
+          "sha256": "d00b2ee0e53b96f33fe228428d67e928e2f856a53726ac93c9b0020725c38cb9"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 3594,
+          "sha256": "10b0692a71cd2f652c7fb675dcc33c3587c2d91aee324116feaea280d6cfe4a4"
         },
         {
           "path": "jszip/LICENSE",
@@ -53,225 +79,385 @@
           "size": 97630,
           "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Leitor de EPUB",
+          "description": "Leia livros EPUB ao lado das suas notas: sumário, marcadores, busca, tamanho do texto e temas, cite um trecho, pergunte à IA sobre uma seção"
+        }
+      }
     },
     {
       "id": "balancer",
       "name": "Equation balancer",
       "description": "Balances chemical equations exactly (ions too), reads one from your lasso, and finds the limiting reagent and product masses.",
       "icon": "science",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/balancer",
       "files": [
         {
           "path": "index.html",
-          "size": 18775,
-          "sha256": "49e86328af0748add97a21246b0fa7810a7e750b0e0d3ab2a13b0efef25b22b9"
+          "size": 19313,
+          "sha256": "a10979bb668780b801d245abcc70cae68dbdb3e0bd920d5e25e731e0d8e15ce8"
         },
         {
           "path": "manifest.json",
           "size": 316,
-          "sha256": "50415da3a9cef4440487548eb1957f9bbcd9efb453a6ad977e440632ccb0d02e"
+          "sha256": "dd9152d7377c5015f72bb568fcd5b41d997bc0ee91ff7fdc2cce9e09b99e8545"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 3615,
+          "sha256": "124369238bf5e653ae7a930b7c47d3de8b63ee087f7f1483d46e18026ac35298"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 5773,
+          "sha256": "41e774b050d912c45102b444a413b16e82a4e0f9de737268fe9605a52729112e"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Balanceador de equações",
+          "description": "Balanceia equações químicas com exatidão (íons também), lê uma equação do seu laço e encontra o reagente limitante e as massas dos produtos."
+        }
+      }
     },
     {
       "id": "feynman",
       "name": "Feynman explainer",
       "description": "Explain a concept in your own words and the AI points out gaps, errors and jargon, then asks a deeper question.",
       "icon": "chat",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/feynman",
       "files": [
         {
           "path": "index.html",
-          "size": 8737,
-          "sha256": "9e86413d709c104438b3d458ea3da027502c6233a00121e9e00c1f34b44150a6"
+          "size": 9208,
+          "sha256": "5aaac39e4d7cd2ffc4d3123edb9003062bdc295832f348cdd68dcb68525af138"
         },
         {
           "path": "manifest.json",
           "size": 298,
-          "sha256": "65831474f134d775c94fac9068e9b72d732df1ab09ede2f6000cba7178815e6c"
+          "sha256": "4ff6c4a182b195e1fa59927603f80adac8c746ca062752ab73ab2f2f39c6b1b3"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 720,
+          "sha256": "404056b14394b45f09595d25982de12eaf986deb116a4d8e3e3f719221e7f007"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1188,
+          "sha256": "19be41962056fcd432a93636bf07fcb71b448e3699632ca7c3a419862cc59ce2"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Explicador Feynman",
+          "description": "Explique um conceito com suas palavras e a IA aponta lacunas, erros e jargões, depois faz uma pergunta mais profunda."
+        }
+      }
     },
     {
       "id": "flashcards",
       "name": "Flashcards",
       "description": "Spaced-repetition flashcards. Add cards by hand or let the AI write them from your page, then review what's due.",
       "icon": "book",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/flashcards",
       "files": [
         {
           "path": "index.html",
-          "size": 12088,
-          "sha256": "407cae8f74700397dc62db719a0829c36d477c9395b6fd6b44fd0e3796a8d5b1"
+          "size": 12583,
+          "sha256": "9e4e519aa6185f23791e7185d4b0bca936d524aa3f4081a535e823120b5c81b3"
         },
         {
           "path": "manifest.json",
           "size": 295,
-          "sha256": "2e2b540eb259f11070db225a416cac8e66aad5a918d8549888124ce8b60c5cac"
+          "sha256": "423866a7a2f6e992d74a6397f000e735a4b2f5b9f14eac668d5bc5a903cc47fc"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 1100,
+          "sha256": "d1fad2237f9467bc56197089ca07e4671818a4985dcfa6ee905e1d8d4846c6f9"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1846,
+          "sha256": "c43c16aae33a54d6d16de747adaa39148a0c61d50798dfa74dc7a1d41d4527fd"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Flashcards",
+          "description": "Flashcards com repetição espaçada. Adicione cartões à mão ou deixe a IA criá-los a partir da sua página e revise os pendentes."
+        }
+      }
     },
     {
       "id": "pomodoro",
       "name": "Focus timer",
       "description": "Pomodoro timer with focus and break cycles, a daily study total and a weekly chart. Write your study time onto the page.",
       "icon": "timer",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/pomodoro",
       "files": [
         {
           "path": "index.html",
-          "size": 11702,
-          "sha256": "c064ccb421a77d774ab5bb58bec2786a50db01434aae7e16c17105eb028056ee"
+          "size": 12239,
+          "sha256": "c70f31ecd58b169cc45b6caaa38f6a1eb34d1a7d164e642d2b45cc6c58b901a0"
         },
         {
           "path": "manifest.json",
           "size": 303,
-          "sha256": "5797308ea8bf88803450328d4f0522986ca4b8b942d60c3d545e3ddce8f486d9"
+          "sha256": "9045b801eecfda48f7ae9b40eb3fd7112f1493740101b7f5910c12ffc1bb2f0a"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 877,
+          "sha256": "96d213e8e22e67f898eb8f6984a52bf5bd41a9d2c3dd33602e07c19c49fd6bad"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1422,
+          "sha256": "3a0499da0cc9708713f8b83850d1a2c91ad72cd14ebc25dc418ac698ce6dd7e7"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Timer de foco",
+          "description": "Timer Pomodoro com ciclos de foco e pausa, total de estudo do dia e gráfico semanal. Escreva seu tempo de estudo na página."
+        }
+      }
     },
     {
       "id": "formulas",
       "name": "Formula sheet",
       "description": "Searchable formulas for maths, stats, physics, chemistry and finance. Add your own and write any of them onto the page.",
       "icon": "functions",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/formulas",
       "files": [
         {
           "path": "index.html",
-          "size": 10586,
-          "sha256": "89514041bb44d63a76e44dc5b0e781bfcbbea402ffabcafbca64f9bf29dd7969"
+          "size": 11092,
+          "sha256": "606620ff13f0aa2c9ed86c349e783aec19fb10c4224dfad9f6094927f00f1f48"
         },
         {
           "path": "manifest.json",
           "size": 308,
-          "sha256": "51512e60eed8917b89dfccf5b5340269530c83f3aedb8a8b9a976956ef63c17e"
+          "sha256": "4e038230d78f6ab86414095d5643873ff024a7dde6f05a8c2a9b44177d57d447"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 1683,
+          "sha256": "9e04f84665ba12db169840f2f2c69e565b8dae0463cd3dfedbf21d7c0fa385ad"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 2819,
+          "sha256": "6efa59419695b41f6b6511a5f19f8a89d99272f98a2cabb057845eb0e6dbf5de"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Folha de fórmulas",
+          "description": "Fórmulas pesquisáveis de matemática, estatística, física, química e finanças. Adicione as suas e escreva qualquer uma na página."
+        }
+      }
     },
     {
       "id": "glossary",
       "name": "Glossary builder",
       "description": "Collect terms as you study, let the AI define them or find them on your page, then write the glossary onto the page.",
       "icon": "translate",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/glossary",
       "files": [
         {
           "path": "index.html",
-          "size": 9659,
-          "sha256": "4e9b86b10e13f2964dd5f60c11d44b1f72cbe499ffc90afb3e67d6d44a4ad870"
+          "size": 10186,
+          "sha256": "684e6ab266f1535a7ee205b29e0498c7005cc9b7c28aab4904b3dfa5128a4cb8"
         },
         {
           "path": "manifest.json",
           "size": 308,
-          "sha256": "468491d13ba7fdec5b6bb75e33894cfca7b6b238ea05f34adad66a6dd3788637"
+          "sha256": "e9321287532c1b6dc7258e569ad9f35e665986c2b67028405ff64ac0a65033fd"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 798,
+          "sha256": "181d4b5d08441d94121e2418cc13c75cd122f4b10ee425a7cca71670b1267979"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1339,
+          "sha256": "e70cf6404dc3a536590b61ea82e189bf5bd87af343ec8b1ca792f4b2e2a77195"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Construtor de glossário",
+          "description": "Reúna termos enquanto estuda, deixe a IA defini-los ou encontrá-los na sua página e escreva o glossário na página."
+        }
+      }
     },
     {
       "id": "graph",
       "name": "Graph plotter",
       "description": "Plot functions or data points (with a best-fit line) and place the graph on your page.",
       "icon": "graph",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/graph",
       "files": [
         {
           "path": "index.html",
-          "size": 17246,
-          "sha256": "33e7f290aea23e9b22d43917ae1d7220ee80580c33e641a85e4b5be9c290c8cd"
+          "size": 17699,
+          "sha256": "484bde6fab982fa9821559ffd35b171affa3555a863565fabb0a7abfb4b028f5"
         },
         {
           "path": "manifest.json",
           "size": 268,
-          "sha256": "01032eaf03a2f994d03d76562d779c20bc6b6897b3baaa723a252c1b3a68869d"
+          "sha256": "bfa765504ebe510a54441eab0feff002fb9e160b5586318d41db2b3adbe7f91e"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 1074,
+          "sha256": "f167966591c80322b078f2cd038a95541da01f86b60dcc8e6539709a0b9c3102"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1862,
+          "sha256": "7e0603ae7ef0198c3072203704d23b7bca4980ba0308e395745c88f4acad8a3a"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Plotador de gráficos",
+          "description": "Plote funções ou pontos de dados (com reta de melhor ajuste) e coloque o gráfico na sua página."
+        }
+      }
     },
     {
       "id": "mistakes",
       "name": "Mistake log",
       "description": "Capture mistakes with the lasso, note the right answer, and review them on a spaced schedule until they stick.",
       "icon": "book",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/mistakes",
       "files": [
         {
           "path": "index.html",
-          "size": 12085,
-          "sha256": "7a0a585b98488aa8bf5ae0207f41164fff25f030fc69d3c7d5dac53d807cbc2e"
+          "size": 12582,
+          "sha256": "28efb72d16f6a6a2c729749ed934eacf4cc0bd756580a17d5240550c9e57e1e0"
         },
         {
           "path": "manifest.json",
           "size": 292,
-          "sha256": "593a0b69c9cad5d2dc728e6988e81c0af1e904449c9b38bcb82bab082567bf35"
+          "sha256": "4891507301592dcfbe70a68e4d7210b9944153732d2595ade2f30b440a423bc0"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 1328,
+          "sha256": "51db54e424ba6a7935b4253f7ce56f4427774fd1bcdf3f25cbf658f9a82ff8e7"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 2254,
+          "sha256": "71e013bf4d7ac2bded4baafad638bdc0bf642611bd9236c1bf35b6770e9d56d5"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Registro de erros",
+          "description": "Capture erros com o laço, anote a resposta certa e revise-os em intervalos espaçados até fixar."
+        }
+      }
     },
     {
       "id": "molarmass",
       "name": "Molar mass",
       "description": "Molar mass and composition of any formula, with gram / mole / particle / gas-volume conversions.",
       "icon": "calculate",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/molarmass",
       "files": [
         {
           "path": "index.html",
-          "size": 14382,
-          "sha256": "a56a967737d81ce71ce3201c5cfad0c39c3b9cf1f0841382265ddba081cb082d"
+          "size": 14838,
+          "sha256": "a87a9cd8b970b6e31e61cce13b88773676d32f4bf928561744c1f2e97e84845a"
         },
         {
           "path": "manifest.json",
           "size": 283,
-          "sha256": "f410f5ebc1d84439da262d9c3aa0aad2ed689e6b644c0521b2b10245311cdd37"
+          "sha256": "b042545b9b256dcfe95325d650cdb69382ab5b05f880ddc73fb503dceaeee81b"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 3044,
+          "sha256": "93f7cd7225b19f45b79b949a460ac4495ce8b84456f85081344c0b3a46f2d64c"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 4693,
+          "sha256": "00c6fe46e7a2a32894056bca6dcf0f68c022126519ab0bed629bd057b01e846a"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Massa molar",
+          "description": "Massa molar e composição de qualquer fórmula, com conversões entre gramas, mols, partículas e volume de gás."
+        }
+      }
     },
     {
       "id": "pdfreader",
       "name": "PDF reader",
       "description": "Read PDFs next to your notes: table of contents, bookmarks, search, cite a page, ask AI about a page",
       "icon": "book",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/pdfreader",
       "files": [
         {
           "path": "index.html",
-          "size": 23333,
-          "sha256": "ea99c5558550426bb432061330387b2236f03761c21a721607e02b8e963b7ea7"
+          "size": 23837,
+          "sha256": "fb0b34ffb58a98adc199bd49194105bc22a5913848d89cfcf183a82234a413ae"
         },
         {
           "path": "manifest.json",
           "size": 282,
-          "sha256": "ecc5213c61969d41fb63e799fdc953070504af6118a362d7121e514e598242a5"
+          "sha256": "6acf865aa15c6e0c2202ebab28bade4800f1ac3e15604cdb1e8c20283ece8ab6"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 1425,
+          "sha256": "8d073c48c0d0e5dbc595b71cf935726416294e14c85c9c1808f6569bebd50193"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 2460,
+          "sha256": "0c3cfa0bad0d3960b273408c260d545f8839ff7c7dbb5cc784a925306deeacf5"
         },
         {
           "path": "pdfjs/LICENSE",
@@ -293,139 +479,241 @@
           "size": 1417586,
           "sha256": "bd88805178a26c729db8c0107a5b630cb900ec070f4d8c7529a3e45530afd41d"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Leitor de PDF",
+          "description": "Leia PDFs ao lado das suas notas: sumário, marcadores, busca, cite uma página, pergunte à IA sobre uma página"
+        }
+      }
     },
     {
       "id": "periodic",
       "name": "Periodic table",
       "description": "Tap an element for its mass, electron configuration, orbital boxes and quantum numbers; write it or place an orbital diagram on the page.",
       "icon": "science",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/periodic",
       "files": [
         {
           "path": "index.html",
-          "size": 19522,
-          "sha256": "3e4d848ea5bf66f8160f7b0f7b44406506cfefb8126c1a8465e512da7c56b2a8"
+          "size": 20048,
+          "sha256": "27e08957db7fd066f41115182d259f96c2930232d36ec7daf8ba85e825587a36"
         },
         {
           "path": "manifest.json",
           "size": 325,
-          "sha256": "887358ff9f790f88209c6a0ccc2ff4b08b85c55d00c233292140a5482c089ec2"
+          "sha256": "eb91c505bc0f8538f0bb1f57569719b8720aac03de88c77787207bcce2c965c4"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 3072,
+          "sha256": "d7158bcd5af114d227439dd77cffb5ebe274650e44841c6439bd6ad183a77093"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 4705,
+          "sha256": "40571353f7db3df9ca17f81aa732ff2e299b52012e56db280721149187845d9e"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Tabela periódica",
+          "description": "Toque em um elemento para ver massa, configuração eletrônica, caixas de orbitais e números quânticos; escreva-o ou coloque um diagrama de orbitais na página."
+        }
+      }
     },
     {
       "id": "quiz",
       "name": "Quiz me",
       "description": "The AI writes a multiple-choice quiz from a topic or your page, marks your answers and remembers your weak topics so you can drill them.",
       "icon": "science",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/quiz",
       "files": [
         {
           "path": "index.html",
-          "size": 11403,
-          "sha256": "db28c5ddde81c85df3c0e65518d0b05afd2ed11b275ac0620ddaa174f3a1e828"
+          "size": 11964,
+          "sha256": "5d19f9919295c5f15718e5e87091c7dd61fc300f5cf0af1dbaf9ed63ccd7432a"
         },
         {
           "path": "manifest.json",
           "size": 313,
-          "sha256": "3671fef8865eafbabff5b35b5f0d37c89c565d9bf63c6878e1fc990db22a80a9"
+          "sha256": "e5dd707a80a9568975e3a0f98b049e0919d290fa37d2355382700d781b425c9e"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 1077,
+          "sha256": "77d1a4fef7d6e2919d258c456de7724297a78062ce31eae81e545de516828931"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1772,
+          "sha256": "7e46643e8917441157f441f2f3941f4474ad3dcac22fca37b4423e9e2cf09bf9"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Quiz",
+          "description": "A IA cria um quiz de múltipla escolha a partir de um tema ou da sua página, corrige suas respostas e lembra seus pontos fracos para você treiná-los."
+        }
+      }
     },
     {
       "id": "streak",
       "name": "Study streak",
       "description": "Check in each day you study and watch your streak and a calendar heatmap grow.",
       "icon": "map",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/streak",
       "files": [
         {
           "path": "index.html",
-          "size": 9790,
-          "sha256": "b1f12a98ec3046edbaf5841200add5a8fab561416a2a7cfb2c19d489876aab0c"
+          "size": 10425,
+          "sha256": "f862a82cab716e51ee2f89614f5d46d28ecdfb32a8e368ca290237f8bbc9430e"
         },
         {
           "path": "manifest.json",
           "size": 258,
-          "sha256": "ff0a23f1a1a46227e602ef82a90d506d359c7638608b89ab0dd209a30a31a1fc"
+          "sha256": "563047d7b7343da7f0a96e33d01f17c9f93caf7fcbd1ef2222212d40edb0c6ba"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 688,
+          "sha256": "3bd8ac55732d0223a070641a7cda37f433a9ae38ec1fd27aaad4667b8b8a535b"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1211,
+          "sha256": "8bba485ef5e10cffc36ddc7746c54a717283a1024a71bcd9157a9c287b359775"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Sequência de estudos",
+          "description": "Marque cada dia em que você estuda e veja sua sequência e um calendário de calor crescerem."
+        }
+      }
     },
     {
       "id": "table",
       "name": "Table builder",
       "description": "Build a neat table grid, optionally with typed headers, and place it on your page to fill in.",
       "icon": "table",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/table",
       "files": [
         {
           "path": "index.html",
-          "size": 10844,
-          "sha256": "5e9e237101c44fba991a2b597ac20cc9654bdbe45c0c44569fbb623b3406e79b"
+          "size": 11271,
+          "sha256": "1026dac5a7a464f8665320dbd6077c2ed9150267a33c627475b41a96e139911c"
         },
         {
           "path": "manifest.json",
           "size": 275,
-          "sha256": "9ebaa1a17aa1df6e1d498f03a7fc018dba1eaaf94005bc45d26996ae5038bf19"
+          "sha256": "ac09a398f85d4623d259e20a3bb5634e888d9b4f25b251c2c4fb9a4937599baa"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 819,
+          "sha256": "13a4b3f25b894b3c7e4857330048d9f3dbc4d0f729569917c7ba16b47ed529e4"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1439,
+          "sha256": "60a0e611a178176c78e6ffc6c87f73761378f9c7b68b523168ebb5be3203c5de"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Construtor de tabelas",
+          "description": "Monte uma grade de tabela organizada, com cabeçalhos digitados se quiser, e coloque-a na página para preencher."
+        }
+      }
     },
     {
       "id": "tamagotchi",
       "name": "Tamagotchi",
       "description": "A virtual pet that lives next to your notes: feed it, play, clean up and let it sleep. It keeps getting hungry while you're away.",
       "icon": "extension",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Fun",
       "path": "tools/tamagotchi",
       "files": [
         {
           "path": "index.html",
-          "size": 11283,
-          "sha256": "59d62201a8179f168066876fb635cabdb8d8ba831608f11800c466cf61c01368"
+          "size": 11836,
+          "sha256": "72b2aeda87cb1c26c5e4ef125b4463a49021fbd80be6f84a536e8c56b5daee9c"
         },
         {
           "path": "manifest.json",
           "size": 315,
-          "sha256": "4a9a0994351b74f271121456c81b28333f62d3250490df616fdfd03801360592"
+          "sha256": "d65a8a5d031748de0297a4d721e5737766614fe8c3a800acf8053e06995a0583"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 1053,
+          "sha256": "2420184c91b11e01694b242268e2599f94cc701a0da3b876f6f65b6c6bdf5acb"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1707,
+          "sha256": "bf1f6db133bacc5bfb2dea6f00ebc204bc82d7d063d3b56897356aa1eb499f7b"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Tamagotchi",
+          "description": "Um bichinho virtual que vive ao lado das suas notas: alimente, brinque, limpe e deixe-o dormir. Ele continua sentindo fome enquanto você está fora."
+        }
+      }
     },
     {
       "id": "units",
       "name": "Unit converter",
       "description": "Converts length, mass, volume, pressure, energy, temperature, amount, concentration and more.",
       "icon": "calculate",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/units",
       "files": [
         {
           "path": "index.html",
-          "size": 10423,
-          "sha256": "6094fa5252fb52726c0d45d06c421dfc74b54e92ff8228f1125cec45c5920b69"
+          "size": 10880,
+          "sha256": "122af9978abf8bd675c948d214225246a6dbc8b0b20c5d40130f3f894e3f168c"
         },
         {
           "path": "manifest.json",
           "size": 280,
-          "sha256": "0885b8712907d8610c8f957b1e9c03faf7dced1ea81db36472adb40876cbfc16"
+          "sha256": "e4e38b87be30a7688442458f65c339dea2f2155e822a5b9ebbfad3b86f5b41c6"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 737,
+          "sha256": "055269d28434fff343c0ec34a66d0218859333a0a9dea1986914be45a3afa335"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1255,
+          "sha256": "c493ec0a509fa26c1a7cf0a2b6d89a9353e8bdfc3e535022e822d80ff7c39bc1"
         }
-      ]
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Conversor de unidades",
+          "description": "Converte comprimento, massa, volume, pressão, energia, temperatura, quantidade de matéria, concentração e mais."
+        }
+      }
     }
   ]
 }

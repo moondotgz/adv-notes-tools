@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "name": "Sequência de estudos",
+    "description": "Marque cada dia em que você estuda e veja sua sequência e um calendário de calor crescerem.",
+    "machineTranslated": true
+  },
+  "Study streak": "Sequência de estudos",
+  "day streak 🔥": "dias seguidos 🔥",
+  "best streak": "melhor sequência",
+  "days studied": "dias estudados",
+  "Minutes (optional)": "Minutos (opcional)",
+  "I studied today": "Estudei hoje",
+  "Write streak on page": "Escrever a sequência na página",
+  "Written on your page": "Escrito na sua página",
+  "AI is not available here.": "A IA não está disponível aqui.",
+  "The AI did not return structured data. Try again.": "A IA não retornou dados estruturados. Tente de novo.",
+  "Update today": "Atualizar hoje",
+  "Today is logged ({0} min). Nice work!": "Hoje está registrado ({0} min). Bom trabalho!",
+  "Today is logged. Nice work!": "Hoje está registrado. Bom trabalho!",
+  "Keep your {0}-day streak alive!": "Mantenha sua sequência de {0} dias!",
+  "Start a streak today.": "Comece uma sequência hoje.",
+  "Study streak: {0} days 🔥 (best {1}, {2} days total)": "Sequência de estudos: {0} dias 🔥 (melhor {1}, {2} dias no total)"
+}

@@ -43,6 +43,15 @@ def tool(folder):
     out = {k: m[k] for k in ("id", "name", "description", "icon", "version", "author", "category", "minApp") if k in m}
     out["path"] = f"tools/{folder}"
     out["files"] = files
+    # translated name/description from i18n/<tag>.json, shown by the app's tool store
+    i18n = {}
+    idir = os.path.join(base, "i18n")
+    for f in sorted(os.listdir(idir)) if os.path.isdir(idir) else []:
+        if not f.endswith(".json") or f == "en.json": continue
+        meta = json.load(open(os.path.join(idir, f), encoding="utf-8")).get("_meta", {})
+        t = {k: meta[k] for k in ("name", "description") if meta.get(k)}
+        if t: i18n[f[:-5]] = t
+    if i18n: out["i18n"] = i18n
     return out
 
 

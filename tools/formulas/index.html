@@ -70,6 +70,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -88,18 +91,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -117,7 +120,7 @@ function tabs(ids, onchange) {
   bs[0].click();
 }
 
-const BUILT = [
+const BUILT = /* i18n: cols 0,1 */ [
  ['Math','Quadratic formula','x = (−b ± √(b² − 4ac)) / 2a'],
  ['Math','Pythagorean theorem','a² + b² = c²'],
  ['Math','Circle area / circumference','A = πr²,  C = 2πr'],
@@ -166,13 +169,13 @@ const all = () => BUILT.map(([s, n, f]) => ({ s, n, f })).concat(custom.map((c, 
 function render() {
   const f = $('find').value.toLowerCase(), list = all();
   const subs = ['All', ...new Set(list.map(x => x.s))];
-  $('chips').innerHTML = subs.map(s => `<button class="${s === subject ? '' : 'ghost'} fit" data-s="${esc(s)}" style="padding:6px 12px;font-size:14px">${esc(s)}</button>`).join('');
+  $('chips').innerHTML = subs.map(s => `<button class="${s === subject ? '' : 'ghost'} fit" data-s="${esc(s)}" style="padding:6px 12px;font-size:14px">${esc(tr(s))}</button>`).join('');
   $('chips').querySelectorAll('button').forEach(b => b.onclick = () => { subject = b.dataset.s; render(); });
-  const shown = list.filter(x => (subject === 'All' || x.s === subject) && (x.n + x.f + x.s).toLowerCase().includes(f));
-  $('list').innerHTML = shown.map((x, idx) => `<div class="card"><div class="muted">${esc(x.s)} · ${esc(x.n)}</div>
+  const shown = list.filter(x => (subject === 'All' || x.s === subject) && (x.n + x.f + x.s + tr(x.n) + tr(x.s)).toLowerCase().includes(f));   /* i18n: 'All' */
+  $('list').innerHTML = shown.map((x, idx) => `<div class="card"><div class="muted">${esc(tr(x.s))} · ${esc(tr(x.n))}</div>
     <div style="font-size:18px;margin:4px 0">${esc(x.f)}</div>
-    <div class="row"><button class="ghost" data-i="${idx}">Write on page</button>${x.k !== undefined ? `<button class="ghost fit" data-d="${x.k}">Delete</button>` : ''}</div></div>`).join('') || '<p class="muted">No formulas match.</p>';
-  $('list').querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const x = shown[+b.dataset.i]; insert(`${x.n}: ${x.f}`); });
+    <div class="row"><button class="ghost" data-i="${idx}">Write on page</button>${x.k !== undefined ? `<button class="ghost fit" data-d="${x.k}">Delete</button>` : ''}</div></div>`).join('') || '<p class="muted">' + tr('No formulas match.') + '</p>';
+  $('list').querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const x = shown[+b.dataset.i]; insert(`${tr(x.n)}: ${x.f}`); });
   $('list').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { custom.splice(+b.dataset.d, 1); db.set('custom', custom); render(); });
 }
 $('find').oninput = render;
@@ -180,7 +183,7 @@ $('add').onclick = () => {
   const n = $('fn').value.trim(), f = $('fe').value.trim(), s = $('fs').value.trim();
   if (!n || !f) return;
   custom.push({ n, f, s }); db.set('custom', custom);
-  $('fn').value = $('fe').value = $('fs').value = ''; render(); toast('Saved');
+  $('fn').value = $('fe').value = $('fs').value = ''; render(); toast(tr('Saved'));
 };
 render();
 

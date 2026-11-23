@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "name": "Table builder",
+    "description": "Build a neat table grid, optionally with typed headers, and place it on your page to fill in."
+  },
+  "Table builder": "",
+  "Rows": "",
+  "Columns": "",
+  "Row height": "",
+  "Column width": "",
+  "Header row": "",
+  "Header column": "",
+  "Outer border": "",
+  "Inner lines": "",
+  "Wider first column": "",
+  "Type into cells (optional) — leave them empty to fill in by hand.": "",
+  "Place on page": "",
+  "Clear cells": "",
+  "Written on your page": "",
+  "AI is not available here.": "",
+  "The AI did not return structured data. It said: \"{0}\"": "",
+  "Placed on your page — move or resize it with the lasso": "",
+  "Could not place the picture": "",
+  "Update Adv Notes to 1.5.0 or newer to place pictures on the page": "",
+  "header": ""
+}

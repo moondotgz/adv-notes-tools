@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "name": "Construtor de tabelas",
+    "description": "Monte uma grade de tabela organizada, com cabeçalhos digitados se quiser, e coloque-a na página para preencher.",
+    "machineTranslated": true
+  },
+  "Table builder": "Construtor de tabelas",
+  "Rows": "Linhas",
+  "Columns": "Colunas",
+  "Row height": "Altura da linha",
+  "Column width": "Largura da coluna",
+  "Header row": "Linha de cabeçalho",
+  "Header column": "Coluna de cabeçalho",
+  "Outer border": "Borda externa",
+  "Inner lines": "Linhas internas",
+  "Wider first column": "Primeira coluna mais larga",
+  "Type into cells (optional) — leave them empty to fill in by hand.": "Digite nas células (opcional) — deixe vazias para preencher à mão.",
+  "Place on page": "Colocar na página",
+  "Clear cells": "Limpar células",
+  "Written on your page": "Escrito na sua página",
+  "AI is not available here.": "A IA não está disponível aqui.",
+  "The AI did not return structured data. It said: \"{0}\"": "A IA não retornou dados estruturados. Ela disse: \"{0}\"",
+  "Placed on your page — move or resize it with the lasso": "Colocado na sua página — mova ou redimensione com o laço",
+  "Could not place the picture": "Não foi possível colocar a imagem",
+  "Update Adv Notes to 1.5.0 or newer to place pictures on the page": "Atualize o Adv Notes para a 1.5.0 ou mais recente para colocar imagens na página",
+  "header": "cabeçalho"
+}

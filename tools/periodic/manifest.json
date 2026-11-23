@@ -4,7 +4,7 @@
   "description": "Tap an element for its mass, electron configuration, orbital boxes and quantum numbers; write it or place an orbital diagram on the page.",
   "entry": "index.html",
   "icon": "science",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Adv Notes",
   "category": "Study"
 }

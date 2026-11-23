@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "name": "Focus timer",
+    "description": "Pomodoro timer with focus and break cycles, a daily study total and a weekly chart. Write your study time onto the page."
+  },
+  "Focus timer": "",
+  "Timer": "",
+  "Stats": "",
+  "Start": "",
+  "Skip": "",
+  "Reset": "",
+  "What are you working on? (optional)": "",
+  "Focus": "",
+  "Break": "",
+  "Long break": "",
+  "Today": "",
+  "Last 7 days": "",
+  "All time": "",
+  "Write today's summary on page": "",
+  "Clear history": "",
+  "Written on your page": "",
+  "AI is not available here.": "",
+  "The AI did not return structured data. Try again.": "",
+  "Short break": "",
+  "Break over — time to focus": "",
+  "Focus session done. Take a break!": "",
+  "session {0}": "",
+  "Pause": "",
+  "Resume": "",
+  "Today: {0} min focused": "",
+  "Study log {0}: {1} focused": "",
+  "Delete all study history?": ""
+}

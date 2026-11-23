@@ -74,6 +74,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -92,18 +95,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -123,11 +126,11 @@ function tabs(ids, onchange) {
 
 // Places a canvas on the page as a picture (app 1.5.0+).
 function placeImage(cv) {
-  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast('Placed on your page — move or resize it with the lasso') : toast('Could not place the picture'); }
-  else toast('Update Adv Notes to 1.5.0 or newer to place pictures on the page');
+  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast(tr('Placed on your page — move or resize it with the lasso')) : toast(tr('Could not place the picture')); }
+  else toast(tr('Update Adv Notes to 1.5.0 or newer to place pictures on the page'));
 }
 // ---- shared chemistry data: [symbol, name, atomic mass, Pauling electronegativity or 0] by Z-1 ----
-const EL = `H Hydrogen 1.008 2.20|He Helium 4.0026 0|Li Lithium 6.94 0.98|Be Beryllium 9.0122 1.57|B Boron 10.81 2.04|C Carbon 12.011 2.55|N Nitrogen 14.007 3.04|O Oxygen 15.999 3.44|F Fluorine 18.998 3.98|Ne Neon 20.180 0|Na Sodium 22.990 0.93|Mg Magnesium 24.305 1.31|Al Aluminium 26.982 1.61|Si Silicon 28.085 1.90|P Phosphorus 30.974 2.19|S Sulfur 32.06 2.58|Cl Chlorine 35.45 3.16|Ar Argon 39.95 0|K Potassium 39.098 0.82|Ca Calcium 40.078 1.00|Sc Scandium 44.956 1.36|Ti Titanium 47.867 1.54|V Vanadium 50.942 1.63|Cr Chromium 51.996 1.66|Mn Manganese 54.938 1.55|Fe Iron 55.845 1.83|Co Cobalt 58.933 1.88|Ni Nickel 58.693 1.91|Cu Copper 63.546 1.90|Zn Zinc 65.38 1.65|Ga Gallium 69.723 1.81|Ge Germanium 72.630 2.01|As Arsenic 74.922 2.18|Se Selenium 78.971 2.55|Br Bromine 79.904 2.96|Kr Krypton 83.798 3.00|Rb Rubidium 85.468 0.82|Sr Strontium 87.62 0.95|Y Yttrium 88.906 1.22|Zr Zirconium 91.224 1.33|Nb Niobium 92.906 1.6|Mo Molybdenum 95.95 2.16|Tc Technetium 98 1.9|Ru Ruthenium 101.07 2.2|Rh Rhodium 102.91 2.28|Pd Palladium 106.42 2.20|Ag Silver 107.87 1.93|Cd Cadmium 112.41 1.69|In Indium 114.82 1.78|Sn Tin 118.71 1.96|Sb Antimony 121.76 2.05|Te Tellurium 127.60 2.1|I Iodine 126.90 2.66|Xe Xenon 131.29 2.60|Cs Caesium 132.91 0.79|Ba Barium 137.33 0.89|La Lanthanum 138.91 1.10|Ce Cerium 140.12 1.12|Pr Praseodymium 140.91 1.13|Nd Neodymium 144.24 1.14|Pm Promethium 145 0|Sm Samarium 150.36 1.17|Eu Europium 151.96 0|Gd Gadolinium 157.25 1.20|Tb Terbium 158.93 0|Dy Dysprosium 162.50 1.22|Ho Holmium 164.93 1.23|Er Erbium 167.26 1.24|Tm Thulium 168.93 1.25|Yb Ytterbium 173.05 0|Lu Lutetium 174.97 1.27|Hf Hafnium 178.49 1.3|Ta Tantalum 180.95 1.5|W Tungsten 183.84 2.36|Re Rhenium 186.21 1.9|Os Osmium 190.23 2.2|Ir Iridium 192.22 2.20|Pt Platinum 195.08 2.28|Au Gold 196.97 2.54|Hg Mercury 200.59 2.00|Tl Thallium 204.38 1.62|Pb Lead 207.2 2.33|Bi Bismuth 208.98 2.02|Po Polonium 209 2.0|At Astatine 210 2.2|Rn Radon 222 0|Fr Francium 223 0.7|Ra Radium 226 0.9|Ac Actinium 227 1.1|Th Thorium 232.04 1.3|Pa Protactinium 231.04 1.5|U Uranium 238.03 1.38|Np Neptunium 237 1.36|Pu Plutonium 244 1.28|Am Americium 243 1.3|Cm Curium 247 1.3|Bk Berkelium 247 1.3|Cf Californium 251 1.3|Es Einsteinium 252 1.3|Fm Fermium 257 1.3|Md Mendelevium 258 1.3|No Nobelium 259 1.3|Lr Lawrencium 266 0|Rf Rutherfordium 267 0|Db Dubnium 268 0|Sg Seaborgium 269 0|Bh Bohrium 270 0|Hs Hassium 277 0|Mt Meitnerium 278 0|Ds Darmstadtium 281 0|Rg Roentgenium 282 0|Cn Copernicium 285 0|Nh Nihonium 286 0|Fl Flerovium 289 0|Mc Moscovium 290 0|Lv Livermorium 293 0|Ts Tennessine 294 0|Og Oganesson 294 0`
+const EL = /* i18n: names */ `H Hydrogen 1.008 2.20|He Helium 4.0026 0|Li Lithium 6.94 0.98|Be Beryllium 9.0122 1.57|B Boron 10.81 2.04|C Carbon 12.011 2.55|N Nitrogen 14.007 3.04|O Oxygen 15.999 3.44|F Fluorine 18.998 3.98|Ne Neon 20.180 0|Na Sodium 22.990 0.93|Mg Magnesium 24.305 1.31|Al Aluminium 26.982 1.61|Si Silicon 28.085 1.90|P Phosphorus 30.974 2.19|S Sulfur 32.06 2.58|Cl Chlorine 35.45 3.16|Ar Argon 39.95 0|K Potassium 39.098 0.82|Ca Calcium 40.078 1.00|Sc Scandium 44.956 1.36|Ti Titanium 47.867 1.54|V Vanadium 50.942 1.63|Cr Chromium 51.996 1.66|Mn Manganese 54.938 1.55|Fe Iron 55.845 1.83|Co Cobalt 58.933 1.88|Ni Nickel 58.693 1.91|Cu Copper 63.546 1.90|Zn Zinc 65.38 1.65|Ga Gallium 69.723 1.81|Ge Germanium 72.630 2.01|As Arsenic 74.922 2.18|Se Selenium 78.971 2.55|Br Bromine 79.904 2.96|Kr Krypton 83.798 3.00|Rb Rubidium 85.468 0.82|Sr Strontium 87.62 0.95|Y Yttrium 88.906 1.22|Zr Zirconium 91.224 1.33|Nb Niobium 92.906 1.6|Mo Molybdenum 95.95 2.16|Tc Technetium 98 1.9|Ru Ruthenium 101.07 2.2|Rh Rhodium 102.91 2.28|Pd Palladium 106.42 2.20|Ag Silver 107.87 1.93|Cd Cadmium 112.41 1.69|In Indium 114.82 1.78|Sn Tin 118.71 1.96|Sb Antimony 121.76 2.05|Te Tellurium 127.60 2.1|I Iodine 126.90 2.66|Xe Xenon 131.29 2.60|Cs Caesium 132.91 0.79|Ba Barium 137.33 0.89|La Lanthanum 138.91 1.10|Ce Cerium 140.12 1.12|Pr Praseodymium 140.91 1.13|Nd Neodymium 144.24 1.14|Pm Promethium 145 0|Sm Samarium 150.36 1.17|Eu Europium 151.96 0|Gd Gadolinium 157.25 1.20|Tb Terbium 158.93 0|Dy Dysprosium 162.50 1.22|Ho Holmium 164.93 1.23|Er Erbium 167.26 1.24|Tm Thulium 168.93 1.25|Yb Ytterbium 173.05 0|Lu Lutetium 174.97 1.27|Hf Hafnium 178.49 1.3|Ta Tantalum 180.95 1.5|W Tungsten 183.84 2.36|Re Rhenium 186.21 1.9|Os Osmium 190.23 2.2|Ir Iridium 192.22 2.20|Pt Platinum 195.08 2.28|Au Gold 196.97 2.54|Hg Mercury 200.59 2.00|Tl Thallium 204.38 1.62|Pb Lead 207.2 2.33|Bi Bismuth 208.98 2.02|Po Polonium 209 2.0|At Astatine 210 2.2|Rn Radon 222 0|Fr Francium 223 0.7|Ra Radium 226 0.9|Ac Actinium 227 1.1|Th Thorium 232.04 1.3|Pa Protactinium 231.04 1.5|U Uranium 238.03 1.38|Np Neptunium 237 1.36|Pu Plutonium 244 1.28|Am Americium 243 1.3|Cm Curium 247 1.3|Bk Berkelium 247 1.3|Cf Californium 251 1.3|Es Einsteinium 252 1.3|Fm Fermium 257 1.3|Md Mendelevium 258 1.3|No Nobelium 259 1.3|Lr Lawrencium 266 0|Rf Rutherfordium 267 0|Db Dubnium 268 0|Sg Seaborgium 269 0|Bh Bohrium 270 0|Hs Hassium 277 0|Mt Meitnerium 278 0|Ds Darmstadtium 281 0|Rg Roentgenium 282 0|Cn Copernicium 285 0|Nh Nihonium 286 0|Fl Flerovium 289 0|Mc Moscovium 290 0|Lv Livermorium 293 0|Ts Tennessine 294 0|Og Oganesson 294 0`
   .split('|').map((r, i) => { const [s, n, m, en] = r.split(' '); return { z: i + 1, s, n, m: +m, en: +en || null }; });
 const BY = Object.fromEntries(EL.map(e => [e.s, e]));
 
@@ -144,19 +147,19 @@ function parseFormula(f) {
       const out = {};
       while (i < part.length) {
         const c = part[i];
-        if (c === '(' || c === '[') { i++; const g = group(); if (part[i] !== ')' && part[i] !== ']') throw new Error('Missing closing bracket'); i++; const k = num(); for (const e in g) out[e] = (out[e] || 0) + g[e] * k; }
+        if (c === '(' || c === '[') { i++; const g = group(); if (part[i] !== ')' && part[i] !== ']') throw new Error(tr('Missing closing bracket')); i++; const k = num(); for (const e in g) out[e] = (out[e] || 0) + g[e] * k; }
         else if (c === ')' || c === ']') return out;
-        else if (/[A-Z]/.test(c)) { let s = c; i++; while (i < part.length && /[a-z]/.test(part[i])) s += part[i++]; if (!BY[s]) throw new Error('Unknown element "' + s + '"'); const k = num(); out[s] = (out[s] || 0) + k; }
-        else throw new Error('Unexpected "' + c + '"');
+        else if (/[A-Z]/.test(c)) { let s = c; i++; while (i < part.length && /[a-z]/.test(part[i])) s += part[i++]; if (!BY[s]) throw new Error(tr('Unknown element "{0}"', s)); const k = num(); out[s] = (out[s] || 0) + k; }
+        else throw new Error(tr('Unexpected "{0}"', c));
       }
       return out;
     }
     function num() { let d = ''; while (i < part.length && /\d/.test(part[i])) d += part[i++]; return d ? +d : 1; }
     const g = group();
-    if (i < part.length) throw new Error('Unexpected "' + part[i] + '"');
+    if (i < part.length) throw new Error(tr('Unexpected "{0}"', part[i]));
     for (const e in g) total[e] = (total[e] || 0) + g[e] * mult;
   }
-  if (!Object.keys(total).length) throw new Error('Enter a formula');
+  if (!Object.keys(total).length) throw new Error(tr('Enter a formula'));
   return total;
 }
 const molarMass = comp => Object.entries(comp).reduce((a, [e, n]) => a + BY[e].m * n, 0);
@@ -183,10 +186,10 @@ function species(s) {
 let lastBal = null;
 function balance(text) {
   const sides = text.split(/->|→|⟶|=>|=/);
-  if (sides.length !== 2) throw new Error('Use -> (or →, =) once between the two sides.');
+  if (sides.length !== 2) throw new Error(tr('Use -> (or →, =) once between the two sides.'));
   const lhs = sides[0].split(/\s\+\s|\s\+(?=[A-Z(\[\d])/).map(x => x.trim()).filter(Boolean);
   const rhs = sides[1].split(/\s\+\s|\s\+(?=[A-Z(\[\d])/).map(x => x.trim()).filter(Boolean);
-  if (!lhs.length || !rhs.length) throw new Error('Both sides need at least one substance.');
+  if (!lhs.length || !rhs.length) throw new Error(tr('Both sides need at least one substance.'));
   const strip = x => x.replace(/^\d+(?=[A-Z(\[])/, '');   // ignore coefficients the user typed
   const sp = [...lhs, ...rhs].map(x => species(strip(x)));
   const els = [...new Set(sp.flatMap(s => Object.keys(s.comp)))];
@@ -202,15 +205,15 @@ function balance(text) {
     piv.push(c); r++;
   }
   const free = [...Array(n).keys()].filter(c => !piv.includes(c));
-  if (free.length === 0) throw new Error("This can't be balanced — check the formulas.");
-  if (free.length > 1) throw new Error('This has more than one independent balance (it mixes separate reactions). Split it up.');
+  if (free.length === 0) throw new Error(tr("This can't be balanced — check the formulas."));
+  if (free.length > 1) throw new Error(tr('This has more than one independent balance (it mixes separate reactions). Split it up.'));
   const fc = free[0]; const x = Array(n).fill(null); x[fc] = fr(1n);
   piv.forEach((c, i) => { x[c] = fr(-A[i][fc][0], A[i][fc][1]); });
   let L = 1n; x.forEach(v => { L = L * v[1] / gcd(L, v[1]); });
   let ints = x.map(v => v[0] * (L / v[1]));
   let G = 0n; ints.forEach(v => G = gcd(G, v)); ints = ints.map(v => v / G);
   if (ints.every(v => v <= 0n)) ints = ints.map(v => -v);
-  if (ints.some(v => v <= 0n)) throw new Error("No balance with every substance on its side — check that the formulas are right.");
+  if (ints.some(v => v <= 0n)) throw new Error(tr("No balance with every substance on its side — check that the formulas are right."));
   return { lhs: lhs.map(strip), rhs: rhs.map(strip), sp, coef: ints.map(Number) };
 }
 const showSp = s => prettyFormula(s.replace(/\^(\d*)([+-])$/, (_, d, c) => (d ? d.replace(/\d/g, x => '⁰¹²³⁴⁵⁶⁷⁸⁹'[x]) : '') + (c === '+' ? '⁺' : '⁻')));
@@ -235,11 +238,11 @@ function stoich() {
   if (!given.length) { $('st').innerHTML = ''; return; }
   const ext = given.map(x => ({ ...x, n: x.g / x.M, e: x.g / x.M / b.coef[x.i] }));
   const lim = ext.reduce((a, c) => c.e < a.e ? c : a); const xi = lim.e;
-  let h = `<div><b>Limiting reagent: ${esc(showSp(b.lhs[lim.i]))}</b>${given.length === 1 ? ' <span class="muted">(only one amount given — the others are assumed in excess)</span>' : ''}</div><table class="t"><tr><th></th><th>mol</th><th>g</th></tr>`;
-  stoichText = `${eqText(b)}; limiting: ${showSp(b.lhs[lim.i])}`;
-  ext.forEach(x => { if (x !== lim) { const left = x.g - xi * b.coef[x.i] * x.M; h += `<tr><td>${esc(showSp(b.lhs[x.i]))} left over</td><td>${fmt(left / x.M)}</td><td>${fmt(left)}</td></tr>`; } });
+  let h = `<div><b>${esc(tr('Limiting reagent: {0}', showSp(b.lhs[lim.i])))}</b>${given.length === 1 ? ' <span class="muted">' + tr('(only one amount given — the others are assumed in excess)') + '</span>' : ''}</div><table class="t"><tr><th></th><th>mol</th><th>g</th></tr>`;
+  stoichText = `${eqText(b)}; ` + tr('limiting: {0}', showSp(b.lhs[lim.i]));
+  ext.forEach(x => { if (x !== lim) { const left = x.g - xi * b.coef[x.i] * x.M; h += `<tr><td>${esc(tr('{0} left over', showSp(b.lhs[x.i])))}</td><td>${fmt(left / x.M)}</td><td>${fmt(left)}</td></tr>`; } });
   b.rhs.forEach((s, k) => { const j = b.lhs.length + k, M = molarMass(b.sp[j].comp), n = xi * b.coef[j];
-    h += `<tr><td>${esc(showSp(s))} formed</td><td>${fmt(n)}</td><td>${fmt(n * M)}</td></tr>`; stoichText += `; ${showSp(s)}: ${fmt(n * M)} g`; });
+    h += `<tr><td>${esc(tr('{0} formed', showSp(s)))}</td><td>${fmt(n)}</td><td>${fmt(n * M)}</td></tr>`; stoichText += `; ${showSp(s)}: ${fmt(n * M)} g`; });
   $('st').innerHTML = h + '</table>';
 }
 $('go').onclick = run;
@@ -247,12 +250,12 @@ $('eq').onkeydown = e => { if (e.key === 'Enter') run(); };
 $('w').onclick = () => lastBal && insert(eqText(lastBal));
 $('ws').onclick = () => stoichText && insert(stoichText);
 $('read').onclick = async () => {
-  $('err').textContent = ''; $('read').disabled = true; $('read').textContent = 'Reading…';
+  $('err').textContent = ''; $('read').disabled = true; $('read').textContent = tr('Reading…');
   try {
     const t = await ask('Transcribe the chemical equation in the attached image as plain text, using formulas like H2SO4, "+" between substances and "->" between the sides. Leave out any coefficients. Reply with the equation only.', { image: 'selection' });
     $('eq').value = t.split('\n').map(x => x.trim()).filter(Boolean)[0] || ''; run();
   } catch (e) { $('err').textContent = e.message; }
-  $('read').disabled = false; $('read').textContent = 'Read from lasso';
+  $('read').disabled = false; $('read').textContent = tr('Read from lasso');
 };
 $('eq').value = db.get('last', 'Fe + O2 -> Fe2O3'); run();
 

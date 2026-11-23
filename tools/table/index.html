@@ -74,6 +74,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -92,18 +95,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const bad = () => new Error('The AI did not return structured data. It said: "' + t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '') + '"');
+  const bad = () => new Error(tr('The AI did not return structured data. It said: "{0}"', t.trim().slice(0, 160) + (t.trim().length > 160 ? '…' : '')));
   const a = t.search(/[\[{]/); if (a < 0) throw bad();
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
@@ -123,8 +126,8 @@ function tabs(ids, onchange) {
 
 // Places a canvas on the page as a picture (app 1.5.0+).
 function placeImage(cv) {
-  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast('Placed on your page — move or resize it with the lasso') : toast('Could not place the picture'); }
-  else toast('Update Adv Notes to 1.5.0 or newer to place pictures on the page');
+  if (A && A.insertImage) { A.insertImage(cv.toDataURL('image/png')) ? toast(tr('Placed on your page — move or resize it with the lasso')) : toast(tr('Could not place the picture')); }
+  else toast(tr('Update Adv Notes to 1.5.0 or newer to place pictures on the page'));
 }
 let st = db.get('table', { rows: 4, cols: 4, rh: 56, cw: 110, hr: true, hc: false, outer: true, inner: true, first: false, cells: {} });
 ['rows','cols','rh','cw'].forEach(k => $(k).value = st[k]); ['hr','hc','outer','inner','first'].forEach(k => $(k).checked = st[k]);
@@ -137,7 +140,7 @@ function renderCells() {
   $('cells').style.gridTemplateColumns = `repeat(${st.cols}, minmax(60px, 1fr))`;
   let h = ''; for (let r = 0; r < st.rows; r++) for (let c = 0; c < st.cols; c++) {
     const head = (st.hr && r === 0) || (st.hc && c === 0);
-    h += `<input data-k="${r},${c}" value="${esc(st.cells[r + ',' + c] || '')}" placeholder="${head ? 'header' : ''}" style="${head ? 'font-weight:600' : ''}">`;
+    h += `<input data-k="${r},${c}" value="${esc(st.cells[r + ',' + c] || '')}" placeholder="${head ? tr('header') : ''}" style="${head ? 'font-weight:600' : ''}">`;
   }
   $('cells').innerHTML = h;
   $('cells').querySelectorAll('input').forEach(i => i.oninput = () => { st.cells[i.dataset.k] = i.value; draw(); });

@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "name": "Conversor de unidades",
+    "description": "Converte comprimento, massa, volume, pressão, energia, temperatura, quantidade de matéria, concentração e mais.",
+    "machineTranslated": true
+  },
+  "Unit converter": "Conversor de unidades",
+  "Swap": "Inverter",
+  "Write on page": "Escrever na página",
+  "Written on your page": "Escrito na sua página",
+  "AI is not available here.": "A IA não está disponível aqui.",
+  "The AI did not return structured data. It said: \"{0}\"": "A IA não retornou dados estruturados. Ela disse: \"{0}\"",
+  "Placed on your page — move or resize it with the lasso": "Colocado na sua página — mova ou redimensione com o laço",
+  "Could not place the picture": "Não foi possível colocar a imagem",
+  "Update Adv Notes to 1.5.0 or newer to place pictures on the page": "Atualize o Adv Notes para a 1.5.0 ou mais recente para colocar imagens na página",
+  "{0} {1} is": "{0} {1} equivale a",
+  "Length": "Comprimento",
+  "Mass": "Massa",
+  "Volume": "Volume",
+  "Pressure": "Pressão",
+  "Energy": "Energia",
+  "Temperature": "Temperatura",
+  "Amount": "Quantidade de matéria",
+  "Concentration": "Concentração",
+  "Time": "Tempo",
+  "Speed": "Velocidade",
+  "Area": "Área"
+}

@@ -4,7 +4,7 @@
   "description": "Read EPUB books next to your notes: contents, bookmarks, search, text size and themes, quote a passage, ask AI about a section",
   "entry": "index.html",
   "icon": "book",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Adv Notes",
   "category": "Study"
 }

@@ -71,6 +71,9 @@
 (() => {
 
 const $ = id => document.getElementById(id);
+
+const tr = (s, ...a) => (window.AdvNotes && window.AdvNotes.t) ? window.AdvNotes.t(s, ...a) : a.reduce((x, v, i) => x.split('{' + i + '}').join(String(v)), s);   // translate (i18n/<lang>.json)
+const inLang = () => (window.AdvNotes && window.AdvNotes.lang && window.AdvNotes.lang !== 'en') ? ' Write all text in ' + window.AdvNotes.languageName + ' (language tag ' + window.AdvNotes.lang + ').' : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const A = window.AdvNotes;
 const db = {
@@ -89,18 +92,18 @@ const db = {
 };
 function toast(m) { try { A && A.toast ? A.toast(m) : null; } catch {} }
 function insert(t) {
-  if (A && A.insertText) { A.insertText(t); toast('Written on your page'); } else alert(t);
+  if (A && A.insertText) { A.insertText(t); toast(tr('Written on your page')); } else alert(t);
 }
 // Ask the AI; resolves with the answer text. src: 'page' | 'selection' | undefined
 async function ask(prompt, opts = {}) {
-  if (!A || !A.ask) throw new Error('AI is not available here.');
+  if (!A || !A.ask) throw new Error(tr('AI is not available here.'));
   const r = await A.ask(prompt, opts);
   return typeof r === 'string' ? r : (r && r.text) || '';
 }
 // Pull the first JSON array/object out of an AI answer, tolerating code fences and chatter.
 function parseJSON(t) {
   t = t.replace(/```(?:json)?/gi, '');
-  const a = t.search(/[\[{]/); if (a < 0) throw new Error('The AI did not return structured data. Try again.');
+  const a = t.search(/[\[{]/); if (a < 0) throw new Error(tr('The AI did not return structured data. Try again.'));
   const open = t[a], close = open === '[' ? ']' : '}';
   const b = t.lastIndexOf(close);
   return JSON.parse(t.slice(a, b + 1));
@@ -136,12 +139,12 @@ function render() {
   const s = stats();
   $('cur').textContent = s.cur; $('best').textContent = s.best; $('total').textContent = s.total;
   const done = today() in log;
-  $('check').textContent = done ? 'Update today' : 'I studied today';
-  $('msg').textContent = done ? `Today is logged${log[today()] ? ' (' + log[today()] + ' min)' : ''}. Nice work!` : (s.cur ? `Keep your ${s.cur}-day streak alive!` : 'Start a streak today.');
-  $('monthName').textContent = view.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  $('check').textContent = done ? tr('Update today') : tr('I studied today');
+  $('msg').textContent = done ? (log[today()] ? tr('Today is logged ({0} min). Nice work!', log[today()]) : tr('Today is logged. Nice work!')) : (s.cur ? tr('Keep your {0}-day streak alive!', s.cur) : tr('Start a streak today.'));
+  $('monthName').textContent = view.toLocaleDateString((window.AdvNotes && window.AdvNotes.lang) || undefined, { month: 'long', year: 'numeric' });
   const first = (view.getDay() + 6) % 7, n = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
   const max = Math.max(60, ...Object.values(log));
-  let h = ['M','T','W','T','F','S','S'].map(x => `<div class="muted" style="text-align:center;font-size:12px">${x}</div>`).join('');
+  let h = [0,1,2,3,4,5,6].map(i => new Date(2024, 0, 1 + i).toLocaleDateString((window.AdvNotes && window.AdvNotes.lang) || undefined, { weekday: 'narrow' })).map(x => `<div class="muted" style="text-align:center;font-size:12px">${x}</div>`).join('');
   h += '<div></div>'.repeat(first);
   for (let d = 1; d <= n; d++) {
     const k = key(new Date(view.getFullYear(), view.getMonth(), d)), has = k in log;
@@ -159,7 +162,7 @@ function render() {
 $('check').onclick = () => { log[today()] = Math.max(0, +$('min').value || log[today()] || 0); db.set('days', log); $('min').value = ''; render(); };
 $('prev').onclick = () => { view.setMonth(view.getMonth() - 1); render(); };
 $('next').onclick = () => { view.setMonth(view.getMonth() + 1); render(); };
-$('ins').onclick = () => { const s = stats(); insert(`Study streak: ${s.cur} days 🔥 (best ${s.best}, ${s.total} days total)`); };
+$('ins').onclick = () => { const s = stats(); insert(tr('Study streak: {0} days 🔥 (best {1}, {2} days total)', s.cur, s.best, s.total)); };
 render();
 
 })();

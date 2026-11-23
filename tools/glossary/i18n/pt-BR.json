@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "name": "Construtor de glossário",
+    "description": "Reúna termos enquanto estuda, deixe a IA defini-los ou encontrá-los na sua página e escreva o glossário na página.",
+    "machineTranslated": true
+  },
+  "Glossary builder": "Construtor de glossário",
+  "Add a term": "Adicione um termo",
+  "Add": "Adicionar",
+  "Define it with AI": "Definir com IA",
+  "Find terms on my page": "Encontrar termos na minha página",
+  "Search glossary": "Buscar no glossário",
+  "Write glossary on page": "Escrever o glossário na página",
+  "Written on your page": "Escrito na sua página",
+  "AI is not available here.": "A IA não está disponível aqui.",
+  "The AI did not return structured data. It said: \"{0}\"": "A IA não retornou dados estruturados. Ela disse: \"{0}\"",
+  "No terms yet.": "Nenhum termo ainda.",
+  "Defining…": "Definindo…",
+  "Defined 1 term.": "1 termo definido.",
+  "Defined {0} terms.": "{0} termos definidos.",
+  "Type a term first, or add terms without definitions.": "Digite um termo primeiro ou adicione termos sem definição.",
+  "Reading your page…": "Lendo sua página…",
+  "Found {0} terms.": "{0} termos encontrados.",
+  "Glossary": "Glossário",
+  "tap to write a definition": "toque para escrever uma definição",
+  "AI define": "Definir com IA",
+  "Delete": "Excluir"
+}
