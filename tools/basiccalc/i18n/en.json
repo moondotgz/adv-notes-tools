@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "name": "Basic calculator",
+    "description": "A plain four-function desk calculator with big keys, percent, memory and a paper tape. No scientific clutter."
+  },
+  "Basic calculator": "",
+  "Memory clear": "",
+  "MC": "",
+  "Memory recall": "",
+  "MR": "",
+  "Memory minus": "",
+  "Memory plus": "",
+  "Clear": "",
+  "AC": "",
+  "Change sign": "",
+  "Percent": "",
+  "Divide": "",
+  "Multiply": "",
+  "Subtract": "",
+  "Add": "",
+  "Backspace": "",
+  "Decimal point": "",
+  "Equals": "",
+  "Write on page": "",
+  "Clear tape": "",
+  "Written on your page": "",
+  "AI is not available here.": "",
+  "The AI did not return structured data. It said: \"{0}\"": "",
+  "Error": ""
+}

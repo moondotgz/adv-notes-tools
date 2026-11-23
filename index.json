@@ -2,6 +2,44 @@
   "format": 1,
   "tools": [
     {
+      "id": "basiccalc",
+      "name": "Basic calculator",
+      "description": "A plain four-function desk calculator with big keys, percent, memory and a paper tape. No scientific clutter.",
+      "icon": "calculate",
+      "version": "1.0.0",
+      "author": "Adv Notes",
+      "category": "Study",
+      "path": "tools/basiccalc",
+      "files": [
+        {
+          "path": "index.html",
+          "size": 13645,
+          "sha256": "178140fd66d98745e09186169b37d6600955f6999a48a647d7c7411c4f0c8ea8"
+        },
+        {
+          "path": "manifest.json",
+          "size": 302,
+          "sha256": "d6c27bc2271857216de8c174d163082fcf16ca3b9eb3d84e9f93466182b044d4"
+        },
+        {
+          "path": "i18n/en.json",
+          "size": 698,
+          "sha256": "5b5f1c7c81f4727cee206dc7b41d6c2bf5a7c8af4812d61ce85bee8371a43475"
+        },
+        {
+          "path": "i18n/pt-BR.json",
+          "size": 1094,
+          "sha256": "7c49a6bd1ab662fe3823be83b3520d04a32830e005d74bdf40e89ee52b2104e0"
+        }
+      ],
+      "i18n": {
+        "pt-BR": {
+          "name": "Calculadora simples",
+          "description": "Uma calculadora de mesa simples com quatro operações, teclas grandes, porcentagem, memória e fita de papel. Sem a bagunça das científicas."
+        }
+      }
+    },
+    {
       "id": "constants",
       "name": "Constants",
       "description": "Physical, chemical, maths and astronomy constants with units. Search, copy, add your own and write any of them onto the page.",

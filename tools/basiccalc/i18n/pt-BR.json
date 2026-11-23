@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "name": "Calculadora simples",
+    "description": "Uma calculadora de mesa simples com quatro operações, teclas grandes, porcentagem, memória e fita de papel. Sem a bagunça das científicas.",
+    "machineTranslated": true
+  },
+  "Basic calculator": "Calculadora simples",
+  "Memory clear": "Limpar memória",
+  "MC": "MC",
+  "Memory recall": "Recuperar memória",
+  "MR": "MR",
+  "Memory minus": "Subtrair da memória",
+  "Memory plus": "Somar à memória",
+  "Clear": "Limpar",
+  "AC": "AC",
+  "Change sign": "Trocar sinal",
+  "Percent": "Porcentagem",
+  "Divide": "Dividir",
+  "Multiply": "Multiplicar",
+  "Subtract": "Subtrair",
+  "Add": "Somar",
+  "Backspace": "Apagar",
+  "Decimal point": "Vírgula decimal",
+  "Equals": "Igual",
+  "Write on page": "Escrever na página",
+  "Clear tape": "Limpar fita",
+  "Written on your page": "Escrito na sua página",
+  "AI is not available here.": "A IA não está disponível aqui.",
+  "The AI did not return structured data. It said: \"{0}\"": "A IA não retornou dados estruturados. Ela disse: \"{0}\"",
+  "Error": "Erro"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "basiccalc",
+  "name": "Basic calculator",
+  "description": "A plain four-function desk calculator with big keys, percent, memory and a paper tape. No scientific clutter.",
+  "entry": "index.html",
+  "icon": "calculate",
+  "version": "1.0.0",
+  "author": "Adv Notes",
+  "category": "Study"
+}
