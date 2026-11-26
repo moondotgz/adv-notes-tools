@@ -529,38 +529,38 @@
     {
       "id": "periodic",
       "name": "Periodic table",
-      "description": "Tap an element for its mass, electron configuration, orbital boxes and quantum numbers; write it or place an orbital diagram on the page.",
+      "description": "Tap an element for its mass, electron configuration, valence and oxidation states, orbital boxes and quantum numbers; write it or place an orbital diagram on the page.",
       "icon": "science",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": "Adv Notes",
       "category": "Study",
       "path": "tools/periodic",
       "files": [
         {
           "path": "index.html",
-          "size": 20048,
-          "sha256": "27e08957db7fd066f41115182d259f96c2930232d36ec7daf8ba85e825587a36"
+          "size": 21493,
+          "sha256": "bc31d7d8d2fe74423ad768b416b77dcf16ee728e06f0be6b9be8c74b58e8eba3"
         },
         {
           "path": "manifest.json",
-          "size": 325,
-          "sha256": "eb91c505bc0f8538f0bb1f57569719b8720aac03de88c77787207bcce2c965c4"
+          "size": 355,
+          "sha256": "a603601cbe451ebfc77a3d2b386ca47e088cfdb2b094f70b0b427d9bd305415f"
         },
         {
           "path": "i18n/en.json",
-          "size": 3072,
-          "sha256": "d7158bcd5af114d227439dd77cffb5ebe274650e44841c6439bd6ad183a77093"
+          "size": 3145,
+          "sha256": "08346da34c69bd36f429c0076b9190cc62afc27d07d3672621ad370dd45df931"
         },
         {
           "path": "i18n/pt-BR.json",
-          "size": 4705,
-          "sha256": "40571353f7db3df9ca17f81aa732ff2e299b52012e56db280721149187845d9e"
+          "size": 4813,
+          "sha256": "389f8edd5a83b1cbfcd335fe6c24382bb1a3477545933f0cb520485cf8326185"
         }
       ],
       "i18n": {
         "pt-BR": {
           "name": "Tabela periódica",
-          "description": "Toque em um elemento para ver massa, configuração eletrônica, caixas de orbitais e números quânticos; escreva-o ou coloque um diagrama de orbitais na página."
+          "description": "Toque em um elemento para ver massa, configuração eletrônica, valência e estados de oxidação, caixas de orbitais e números quânticos; escreva-o ou coloque um diagrama de orbitais na página."
         }
       }
     },

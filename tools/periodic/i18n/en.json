@@ -1,7 +1,7 @@
 {
   "_meta": {
     "name": "Periodic table",
-    "description": "Tap an element for its mass, electron configuration, orbital boxes and quantum numbers; write it or place an orbital diagram on the page."
+    "description": "Tap an element for its mass, electron configuration, valence and oxidation states, orbital boxes and quantum numbers; write it or place an orbital diagram on the page."
   },
   "Periodic table": "",
   "Search element (name, symbol or number)": "",
@@ -15,6 +15,8 @@
   "Unknown element \"{0}\"": "",
   "Unexpected \"{0}\"": "",
   "Enter a formula": "",
+  "Valence": "",
+  "Oxidation states": "",
   "last e⁻": "",
   "Hydrogen": "",
   "Helium": "",

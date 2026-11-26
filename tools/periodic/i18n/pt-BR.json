@@ -1,7 +1,7 @@
 {
   "_meta": {
     "name": "Tabela periódica",
-    "description": "Toque em um elemento para ver massa, configuração eletrônica, caixas de orbitais e números quânticos; escreva-o ou coloque um diagrama de orbitais na página.",
+    "description": "Toque em um elemento para ver massa, configuração eletrônica, valência e estados de oxidação, caixas de orbitais e números quânticos; escreva-o ou coloque um diagrama de orbitais na página.",
     "machineTranslated": true
   },
   "Periodic table": "Tabela periódica",
@@ -144,5 +144,7 @@
   "Last electron": "Último elétron",
   "Write on page": "Escrever na página",
   "Place orbital diagram": "Colocar diagrama de orbitais",
-  "Valence orbitals (Hund's rule)": "Orbitais de valência (regra de Hund)"
+  "Valence orbitals (Hund's rule)": "Orbitais de valência (regra de Hund)",
+  "Valence": "Valência",
+  "Oxidation states": "Estados de oxidação"
 }

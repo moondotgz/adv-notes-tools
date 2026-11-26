@@ -201,6 +201,13 @@ function valence(z) {
 // Hund's rule: one up-arrow in each box first, then pair up.  Returns per box: 0, 1 (↑) or 2 (↑↓)
 function fill(o, k) { const n = 2 * L[o[1]] + 1; const b = Array(n).fill(0); for (let i = 0; i < k; i++) b[i % n]++; return b; }
 // Quantum numbers of the last electron added.
+// Common oxidation states by Z (from H to Hs); the valences are their sizes as Roman numerals (C: II, IV).
+/* i18n: 'Valence', 'Oxidation states' */
+const OX = '+1 -1|0|+1|+2|+3|-4 +2 +4|-3 +1 +2 +3 +4 +5|-2|-1|0|+1|+2|+3|-4 +4|-3 +3 +5|-2 +2 +4 +6|-1 +1 +3 +5 +7|0|+1|+2|+3|+2 +3 +4|+2 +3 +4 +5|+2 +3 +6|+2 +3 +4 +6 +7|+2 +3|+2 +3|+2 +3|+1 +2|+2|+3|+2 +4|-3 +3 +5|-2 +4 +6|-1 +1 +3 +5|0 +2|+1|+2|+3|+4|+3 +5|+4 +6|+4 +7|+3 +4 +8|+3|+2 +4|+1|+2|+3|+2 +4|-3 +3 +5|-2 +4 +6|-1 +1 +3 +5 +7|0 +2 +4 +6|+1|+2|+3|+3 +4|+3|+3|+3|+2 +3|+2 +3|+3|+3|+3|+3|+3|+3|+2 +3|+3|+4|+5|+4 +6|+4 +7|+4 +8|+3 +4|+2 +4|+1 +3|+1 +2|+1 +3|+2 +4|+3|+2 +4|-1 +1|+2|+1|+2|+3|+4|+5|+3 +4 +5 +6|+5|+4|+3|+3|+3|+3|+3|+3|+3|+2|+3|+4|+5|+6|+7|+8'.split('|').map(x => x.split(' ').map(Number));
+const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+const oxStates = z => OX[z - 1] || null;
+const valences = z => { const o = oxStates(z); if (!o) return null; const v = [...new Set(o.map(Math.abs).filter(x => x > 0))].sort((a, b) => a - b); return v.length ? v.map(x => ROMAN[x]) : null; };
+const signed = n => n > 0 ? '+' + n : n < 0 ? '−' + (-n) : '0';
 function lastElectron(z) {
   const c = valence(z); const [o, k] = c[c.length - 1];
   const n = +o[0], l = L[o[1]], boxes = 2 * l + 1;
@@ -244,6 +251,8 @@ function show(z) {
   <div class="kv"><span class="muted">Atomic number</span><span>${e.z}</span>
   <span class="muted">Atomic mass</span><span>${e.m} u</span>
   <span class="muted">Electronegativity</span><span>${e.en ?? '—'}</span>
+  <span class="muted">${tr('Valence')}</span><span>${valences(z) ? valences(z).join(', ') : '—'}</span>
+  <span class="muted">${tr('Oxidation states')}</span><span>${oxStates(z) ? oxStates(z).map(signed).join(', ') : '—'}</span>
   <span class="muted">Configuration</span><span>${cfgText(config(z))}</span>
   <span class="muted">Short</span><span>${shortConfig(z)}</span>
   <span class="muted">Block</span><span>${block(z)}</span></div>
@@ -251,7 +260,7 @@ function show(z) {
   <div class="muted" style="margin-top:8px">Last electron</div>
   <table class="q"><tr><td>n</td><td>l</td><td>m</td><td>mₛ</td></tr><tr><td>${q.n}</td><td>${q.l}</td><td>${q.m}</td><td>${q.ms > 0 ? '+½' : '−½'}</td></tr></table>
   <div class="row"><button id="wtxt">Write on page</button><button class="ghost" id="wimg">Place orbital diagram</button></div>`;
-  $('wtxt').onclick = () => insert(`${e.s} (${tr(e.n)}, Z = ${e.z}, M = ${e.m} g/mol): ${cfgText(config(z))} = ${shortConfig(z)}; ${tr('last e⁻')}: n=${q.n}, l=${q.l}, m=${q.m}, mₛ=${q.ms > 0 ? '+½' : '−½'}`);
+  $('wtxt').onclick = () => insert(`${e.s} (${tr(e.n)}, Z = ${e.z}, M = ${e.m} g/mol): ${cfgText(config(z))} = ${shortConfig(z)}; ${tr('last e⁻')}: n=${q.n}, l=${q.l}, m=${q.m}, mₛ=${q.ms > 0 ? '+½' : '−½'}` + (valences(z) ? `; ${tr('Valence')}: ${valences(z).join(', ')}` : ''));
   $('wimg').onclick = () => placeImage(diagram(z));
 }
 // Draws boxes with arrows and n / l / m rows under each box, like a hand-drawn diagram.
